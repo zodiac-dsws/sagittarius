@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+	Arquivo de configuração do Sagitarii Teapot v1.0
+	Por: Carlos Magno Abreu em 18/07/2014
+	
+ -->
+
+<configuration>
+	
+	<cluster>
+		<hostURL>http://192.168.1.30:8080/sagitarii/</hostURL>
+		<poolIntervalMilliSeconds>1500</poolIntervalMilliSeconds>
+		<rPath>/usr/local/lib/R/site-library/rJava/jri</rPath>
+		<activationShowConsole>false</activationShowConsole>
+		<clearDataAfterFinish>false</clearDataAfterFinish>
+		<CSVDelimiter>,</CSVDelimiter>
+		<storageHost>192.168.1.30</storageHost>
+		<storagePort>8139</storagePort>
+		<fileSenderDelay>200</fileSenderDelay>
+		<useSpeedEqualizer>false</useSpeedEqualizer>
+		<enforceTaskLimitToCores>false</enforceTaskLimitToCores>
+		<DLBFrequency>8</DLBFrequency>
+		<maximunRamToUse>80</maximunRamToUse>
+		<maximunCPULimit>85</maximunCPULimit>
+		<minimunCPULimit>70</minimunCPULimit>
+		<maxUploadThreads>7</maxUploadThreads>
+		<hadoopConfigPath>/opt/hadoop/hadoop/etc/hadoop/</hadoopConfigPath>
+	</cluster>
+
+	<proxy>
+		<useProxy>0</useProxy>
+		<proxy-host>proxy_host</proxy-host>
+		<proxy-port>8080</proxy-port>
+		<proxy-password>password</proxy-password>
+		<proxy-user>user</proxy-user> 
+	</proxy>	
+	
+</configuration>

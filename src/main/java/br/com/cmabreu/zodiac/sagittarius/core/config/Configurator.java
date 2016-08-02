@@ -1,5 +1,7 @@
 package br.com.cmabreu.zodiac.sagittarius.core.config;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 
@@ -175,16 +177,26 @@ public class Configurator {
 	}
 	
 	private Configurator(String file) throws Exception {
+		System.out.println("loading XML data from " + file );
+		
+		File fil = new File( file );
+		if ( !fil.exists() ) {
+			System.out.println("xml config file not found at folder");
+			System.out.println( file );
+			System.exit(0);
+		}
+		
 		try {
-			InputStream is = this.getClass().getClassLoader().getResourceAsStream(file);
+			InputStream is = new FileInputStream( file ); 
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			doc = dBuilder.parse(is);
 			doc.getDocumentElement().normalize();
-			loadMainConfig();
-		  } catch (Exception e) {
-				System.out.println("Error: XML file " + file + " not found.");
-		  }			
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("XML file " + file + " not found.");
+		}	
+		
 	}
 	
 	

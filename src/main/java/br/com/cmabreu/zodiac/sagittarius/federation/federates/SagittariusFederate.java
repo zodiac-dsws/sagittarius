@@ -20,7 +20,7 @@ import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.FinishedInstanceInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.RequestTaskInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.RunInstanceInteractionClass;
-import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagitariiClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.TeapotClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
@@ -35,12 +35,12 @@ import hla.rti1516e.exceptions.FederatesCurrentlyJoined;
 import hla.rti1516e.exceptions.FederationExecutionAlreadyExists;
 import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 
-public class SagitariiFederate {
-	private static SagitariiFederate instance;
+public class SagittariusFederate {
+	private static SagittariusFederate instance;
 	
 	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 	private String rootPath;
-	private SagitariiClass sagitariiClass;
+	private SagittariusClass sagitariiClass;
 	private TeapotClass teapotClass;
 	private CoreClass coreClass;
 	private RequestTaskInteractionClass requestTaskInteractionClass;
@@ -154,9 +154,9 @@ public class SagitariiFederate {
 	
 	// ==============================================================================
 
-	public static SagitariiFederate getInstance() throws Exception {
+	public static SagittariusFederate getInstance() throws Exception {
 		if ( instance == null ) {
-			instance = new SagitariiFederate();
+			instance = new SagittariusFederate();
 		}
 		return instance;
 	}
@@ -177,7 +177,7 @@ public class SagitariiFederate {
 	}
 	
 	
-	private SagitariiFederate( ) throws Exception {
+	private SagittariusFederate( ) throws Exception {
 		instanceBuffer = new InstanceBuffer();
 		runningExperiments = new ArrayList<Experiment>();
 		rootPath = PathFinder.getInstance().getPath();
@@ -265,7 +265,7 @@ public class SagitariiFederate {
 		startFederate();
 		if ( sagitariiClass == null ) {
 			
-			sagitariiClass = new SagitariiClass();
+			sagitariiClass = new SagittariusClass();
 			// Publish server attributes
 			sagitariiClass.publish();
 			// Create a new Server Object
@@ -300,7 +300,7 @@ public class SagitariiFederate {
 		}
 	}
 	
-	public SagitariiClass getSagitariiClass() {
+	public SagittariusClass getSagitariiClass() {
 		return sagitariiClass;
 	}
 	

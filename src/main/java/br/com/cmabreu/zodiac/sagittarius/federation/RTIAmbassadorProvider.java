@@ -8,12 +8,12 @@ import hla.rti1516e.RtiFactoryFactory;
 public class RTIAmbassadorProvider {
 	private static RTIAmbassadorProvider instance;
 	private RTIambassador rtiamb;
-	private SagitariiAmbassador myAmb;
+	private SagittariusAmbassador myAmb;
 
 	private RTIAmbassadorProvider() throws Exception {
 		RtiFactory factory = RtiFactoryFactory.getRtiFactory();
 		rtiamb = factory.getRtiAmbassador();
-		myAmb = new SagitariiAmbassador();
+		myAmb = new SagittariusAmbassador();
 		rtiamb.connect(myAmb, CallbackModel.HLA_IMMEDIATE);
 	}
 	
@@ -24,7 +24,7 @@ public class RTIAmbassadorProvider {
 		return instance;
 	}
 	
-	public SagitariiAmbassador getSagitariiAmbassador() {
+	public SagittariusAmbassador getSagitariiAmbassador() {
 		return myAmb;
 	}
 	

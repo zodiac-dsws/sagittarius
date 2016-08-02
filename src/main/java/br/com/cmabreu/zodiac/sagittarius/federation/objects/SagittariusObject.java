@@ -2,7 +2,7 @@ package br.com.cmabreu.zodiac.sagittarius.federation.objects;
 
 import hla.rti1516e.ObjectInstanceHandle;
 
-public class SagitariiObject {
+public class SagittariusObject {
 	private ObjectInstanceHandle instance;
 	private String macAddress;
 	
@@ -16,7 +16,7 @@ public class SagitariiObject {
 		this.macAddress = macAddress;
 	}
 	
-	public SagitariiObject( ObjectInstanceHandle instance ) {
+	public SagittariusObject( ObjectInstanceHandle instance ) {
 		this.instance = instance; 
 		macAddress = "10:10:20:20:30:40";
 	}

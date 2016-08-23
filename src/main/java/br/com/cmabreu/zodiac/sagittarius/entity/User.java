@@ -10,7 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
-import org.hibernate.usertype.UserType;
+import br.com.cmabreu.zodiac.sagittarius.types.UserType;
 
 
 @Entity

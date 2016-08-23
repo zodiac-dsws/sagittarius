@@ -27,7 +27,7 @@ public class ConnFactory {
 		if ( factory == null ) {
 			
 			try { 
-				doLog("starting Hibernate");
+				doLog("starting Hibernate as " + userName + ":******@" + databaseName);
 				
 				Configuration cfg1 = new Configuration();
 				cfg1.configure("hibernate.cfg.xml");

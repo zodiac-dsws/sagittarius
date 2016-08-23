@@ -40,6 +40,8 @@ public class Main {
     		int maxInputBufferCapacity = 500;
        
 			Configurator config = Configurator.getInstance("config.xml");
+			config.loadMainConfig();
+			
 			interval = config.getPoolIntervalSeconds();
 
 			maxInputBufferCapacity = config.getMaxInputBufferCapacity();
@@ -48,6 +50,8 @@ public class Main {
 			String passwd = config.getPassword();
 			String database = config.getDatabaseName();
     		
+			loggerDebug("Credentials: " + user + " | " + database);
+			
     		ConnFactory.setCredentials(user, passwd, database);
 
    		

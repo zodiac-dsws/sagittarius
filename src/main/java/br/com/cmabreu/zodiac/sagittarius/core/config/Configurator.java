@@ -201,7 +201,7 @@ public class Configurator {
 	
 	
 	public void loadMainConfig()  {
-		NodeList mapconfig = doc.getElementsByTagName("sagitarii");
+		NodeList mapconfig = doc.getElementsByTagName("sagittarius");
 		Node mpconfig = mapconfig.item(0);
 		Element mpElement = (Element) mpconfig;
 		try {

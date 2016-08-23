@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.nio.charset.Charset;
 
 public class PathFinder {
@@ -41,7 +39,13 @@ public class PathFinder {
 		// Use getInstance() 
 	}
 	
-	public String getPath() throws UnsupportedEncodingException {
+	public String getPath() throws Exception {
+		
+		File f = new File( this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath() );
+		String rootRoot =  f.getAbsolutePath();
+		return rootRoot.substring(0, rootRoot.lastIndexOf( File.separator ) + 1).replace(File.separator, "/");
+		
+		/*
 		String path = this.getClass().getClassLoader().getResource("").getPath();
 		String fullPath = URLDecoder.decode(path, "UTF-8");
 		String pathArr[] = fullPath.split("/WEB-INF/classes/");
@@ -49,6 +53,7 @@ public class PathFinder {
 		String reponsePath = "";
 		reponsePath = new File(fullPath).getPath();
 		return reponsePath;
+		*/
 	}			
 	
 }

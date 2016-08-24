@@ -12,8 +12,6 @@ import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederat
 import br.com.cmabreu.zodiac.sagittarius.infra.ConnFactory;
 import br.com.cmabreu.zodiac.sagittarius.services.ExperimentService;
 
-
-
 public class Main {
 	private ScheduledExecutorService scheduler;
 	

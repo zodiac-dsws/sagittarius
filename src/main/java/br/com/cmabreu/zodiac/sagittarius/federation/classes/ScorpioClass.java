@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
-import br.com.cmabreu.zodiac.sagittarius.federation.objects.TeapotObject;
+import br.com.cmabreu.zodiac.sagittarius.federation.objects.ScorpioObject;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
@@ -17,7 +17,7 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.exceptions.RTIexception;
 
-public class TeapotClass {
+public class ScorpioClass {
 	private ObjectClassHandle classHandle;
 	private RTIambassador rtiamb;
 	
@@ -33,16 +33,16 @@ public class TeapotClass {
 	private AttributeHandleSet attributes;
 	
 	private EncoderDecoder encodec;	
-	private List<TeapotObject> nodes;
+	private List<ScorpioObject> nodes;
 	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 
-	public List<TeapotObject> getNodes() {
-		return new ArrayList<TeapotObject>( nodes );
+	public List<ScorpioObject> getNodes() {
+		return new ArrayList<ScorpioObject>( nodes );
 	}
 	
 	public boolean objectExists( ObjectInstanceHandle objHandle ) {
-		for ( TeapotObject teapot : getNodes()  ) {
-			if ( teapot.isMe( objHandle ) ) {
+		for ( ScorpioObject scorpio : getNodes()  ) {
+			if ( scorpio.isMe( objHandle ) ) {
 				return true;
 			}
 		}
@@ -50,7 +50,7 @@ public class TeapotClass {
 	}
 
 	public void remove( ObjectInstanceHandle objHandle ) {
-		for ( TeapotObject node : getNodes()  ) {
+		for ( ScorpioObject node : getNodes()  ) {
 			if ( node.isMe(objHandle ) ) {
 				logger.debug( "Node " + node.getMacAddress() + " is offline." );
 				nodes.remove( node );
@@ -59,9 +59,9 @@ public class TeapotClass {
 		}		
 	}
 	
-	public TeapotObject createNew( ObjectInstanceHandle objectHandle ) throws Exception {
-		logger.debug("discovered new Teapot node");
-		TeapotObject node = new TeapotObject( objectHandle );
+	public ScorpioObject createNew( ObjectInstanceHandle objectHandle ) throws Exception {
+		logger.debug("discovered new Scorpio node");
+		ScorpioObject node = new ScorpioObject( objectHandle );
 		nodes.add( node );
 		return node;
 	}
@@ -74,32 +74,36 @@ public class TeapotClass {
 		return theObjectClass.equals( classHandle );
 	}
 	
-	public TeapotClass( ) throws Exception {
-		nodes = new ArrayList<TeapotObject>();
-		
-		rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
-		this.classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.Teapot" );
-		
-		this.macAddressHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
-		this.soNameHandle = rtiamb.getAttributeHandle( classHandle, "SOName" );
-		this.machineNameHandle = rtiamb.getAttributeHandle( classHandle, "MachineName" );
-		this.cpuLoadHandle = rtiamb.getAttributeHandle( classHandle, "CpuLoad" );
-		this.availableProcessorsHandle = rtiamb.getAttributeHandle( classHandle, "AvailableProcessors" );
-		this.totalMemoryHandle = rtiamb.getAttributeHandle( classHandle, "TotalMemory" );
-		this.freeMemoryHandle = rtiamb.getAttributeHandle( classHandle, "FreeMemory" );
-		this.ipAddressHandle = rtiamb.getAttributeHandle( classHandle, "IPAddress" );
-		
-		this.attributes = rtiamb.getAttributeHandleSetFactory().create();
-		attributes.add( macAddressHandle );
-		attributes.add( soNameHandle );
-		attributes.add( machineNameHandle );
-		attributes.add( cpuLoadHandle );
-		attributes.add( availableProcessorsHandle );
-		attributes.add( totalMemoryHandle );
-		attributes.add( freeMemoryHandle );
-		attributes.add( ipAddressHandle );
-		
-		encodec = new EncoderDecoder();	
+	public ScorpioClass( ) {
+		try {
+			nodes = new ArrayList<ScorpioObject>();
+			
+			rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
+			this.classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.Scorpio" );
+			
+			this.macAddressHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
+			this.soNameHandle = rtiamb.getAttributeHandle( classHandle, "SOName" );
+			this.machineNameHandle = rtiamb.getAttributeHandle( classHandle, "MachineName" );
+			this.cpuLoadHandle = rtiamb.getAttributeHandle( classHandle, "CpuLoad" );
+			this.availableProcessorsHandle = rtiamb.getAttributeHandle( classHandle, "AvailableProcessors" );
+			this.totalMemoryHandle = rtiamb.getAttributeHandle( classHandle, "TotalMemory" );
+			this.freeMemoryHandle = rtiamb.getAttributeHandle( classHandle, "FreeMemory" );
+			this.ipAddressHandle = rtiamb.getAttributeHandle( classHandle, "IPAddress" );
+			
+			this.attributes = rtiamb.getAttributeHandleSetFactory().create();
+			attributes.add( macAddressHandle );
+			attributes.add( soNameHandle );
+			attributes.add( machineNameHandle );
+			attributes.add( cpuLoadHandle );
+			attributes.add( availableProcessorsHandle );
+			attributes.add( totalMemoryHandle );
+			attributes.add( freeMemoryHandle );
+			attributes.add( ipAddressHandle );
+			
+			encodec = new EncoderDecoder();
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
 	}
 
 	
@@ -113,9 +117,9 @@ public class TeapotClass {
 		rtiamb.subscribeObjectClassAttributes( classHandle, attributes );		
 	}
 
-	public TeapotObject reflectAttributeValues( AttributeHandleValueMap theAttributes, ObjectInstanceHandle theObject ) {
+	public ScorpioObject reflectAttributeValues( AttributeHandleValueMap theAttributes, ObjectInstanceHandle theObject ) {
 		// Find the Object instance
-		for ( TeapotObject node : getNodes() ) {
+		for ( ScorpioObject node : getNodes() ) {
 			
 			if( node.getHandle().equals( theObject) ) {
 				// Update its attributes

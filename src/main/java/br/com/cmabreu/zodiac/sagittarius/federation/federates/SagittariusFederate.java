@@ -17,12 +17,8 @@ import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
-import br.com.cmabreu.zodiac.sagittarius.federation.classes.FinishedInstanceInteractionClass;
-import br.com.cmabreu.zodiac.sagittarius.federation.classes.RequestTaskInteractionClass;
-import br.com.cmabreu.zodiac.sagittarius.federation.classes.RunInstanceInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
-import br.com.cmabreu.zodiac.sagittarius.federation.classes.TeapotClass;
-import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
 import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
 import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
@@ -40,24 +36,9 @@ public class SagittariusFederate {
 	
 	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 	private String rootPath;
-	private SagittariusClass sagitariiClass;
-	private TeapotClass teapotClass;
+	private SagittariusClass sagittariusClass;
+	private ScorpioClass scorpioClass;
 	private CoreClass coreClass;
-	private RequestTaskInteractionClass requestTaskInteractionClass;
-	private RunInstanceInteractionClass runInstanceInteractionClass;
-	private FinishedInstanceInteractionClass finishedInstanceInteractionClass;
-
-	public FinishedInstanceInteractionClass getFinishedInstanceInteractionClass() {
-		return finishedInstanceInteractionClass;
-	}
-	
-	public RequestTaskInteractionClass getRequestTaskInteractionClass() {
-		return requestTaskInteractionClass;
-	}
-	
-	public RunInstanceInteractionClass getRunInstanceInteractionClass() {
-		return runInstanceInteractionClass;
-	}
 	
 	// ==== OLD SAGITARII ========================
 	private InstanceBuffer instanceBuffer;
@@ -107,9 +88,10 @@ public class SagittariusFederate {
 	}	
 	
 	public synchronized void finishInstance( ParameterHandleValueMap theParameters ) throws Exception {
-		String nodeSerial = finishedInstanceInteractionClass.getNodeSerial( theParameters );
-		String instanceSerial = finishedInstanceInteractionClass.getInstanceSerial( theParameters );
+
+		logger.error("FINISH INSTANCE!.");
 		
+		/*
 		logger.debug("Node " + nodeSerial + " finished instance " + instanceSerial );
 		
 		Instance instance = instanceBuffer.getIntanceFromOutputBuffer(instanceSerial);
@@ -118,7 +100,7 @@ public class SagittariusFederate {
 		} else {
 			logger.error("instance " + instanceSerial + " is not in output buffer.");
 		}
-		
+		*/
 
 	}
 	
@@ -167,7 +149,7 @@ public class SagittariusFederate {
 
 		rtiamb.resignFederationExecution( ResignAction.DELETE_OBJECTS );
 		try	{
-			rtiamb.destroyFederationExecution( "Sagitarii" );
+			rtiamb.destroyFederationExecution( "Zodiac" );
 			logger.debug( "Destroyed Federation" );
 		} catch( FederationExecutionDoesNotExist dne ) {
 			logger.debug( "No need to destroy federation, it doesn't exist" );
@@ -184,7 +166,7 @@ public class SagittariusFederate {
 	}
 	
 	private void startFederate() {
-		logger.debug("Starting Sagitarii");
+		logger.debug("Starting Zodiac Sagittarius");
 		try {
 
 			Map<String, String> newenv = new HashMap<String, String>();
@@ -198,7 +180,7 @@ public class SagittariusFederate {
 				URL[] modules = new URL[]{
 					(new File( rootPath + "/foms/HLAstandardMIM.xml" ) ).toURI().toURL()
 				};
-				rtiamb.createFederationExecution("Sagitarii", modules );
+				rtiamb.createFederationExecution("Zodiac", modules );
 			} catch( FederationExecutionAlreadyExists exists ) {
 				logger.debug("Federation already exists. Bypassing...");
 			}
@@ -232,9 +214,7 @@ public class SagittariusFederate {
 	}
 	
 	public void sendInstancesToNode( ParameterHandleValueMap theParameters ) throws Exception {
-		String nodeSerial = requestTaskInteractionClass.getNodeSerial( theParameters );
-		String taskType = requestTaskInteractionClass.getTaskType( theParameters );
-		
+		/*
 		if ( !nodeSerial.equals("") ) {
 			CoreObject core = coreClass.getCore( nodeSerial );
 			if ( core != null ) {
@@ -258,41 +238,29 @@ public class SagittariusFederate {
 			}
 			
 		}
+		*/
 	}
 	
 	public void startServer() throws Exception {
-		logger.debug("starting server...");
 		startFederate();
-		if ( sagitariiClass == null ) {
+		if ( sagittariusClass == null ) {
 			
-			sagitariiClass = new SagittariusClass();
+			sagittariusClass = new SagittariusClass();
 			// Publish server attributes
-			sagitariiClass.publish();
+			sagittariusClass.publish();
 			// Create a new Server Object
-			sagitariiClass.createNew();
+			sagittariusClass.createNew();
 			// Send Server attributes to the RTI.  
-			sagitariiClass.updateAttributeValues();
+			sagittariusClass.updateAttributeValues();
 			
-			// Subscribe to Teapot Node Updates
-			teapotClass = new TeapotClass();
-			teapotClass.subscribe();
+			// Subscribe to Scorpio Updates
+			scorpioClass = new ScorpioClass();
+			scorpioClass.subscribe();
 			
 			// Subscribe to Cores updates
 			coreClass = new CoreClass();
 			coreClass.subscribe();
 
-			// Interactions
-			// Subscribe to listen to task rrequests from Cores.
-			requestTaskInteractionClass = new RequestTaskInteractionClass();
-			requestTaskInteractionClass.subscribe();
-			// Publish run instance command
-			runInstanceInteractionClass = new RunInstanceInteractionClass();
-			runInstanceInteractionClass.publish();
-			
-			// Subscribe to know when a core finished an instance
-			finishedInstanceInteractionClass = new FinishedInstanceInteractionClass();
-			finishedInstanceInteractionClass.subscribe();
-			
 			logger.debug("done.");
 			
 		} else {
@@ -300,12 +268,12 @@ public class SagittariusFederate {
 		}
 	}
 	
-	public SagittariusClass getSagitariiClass() {
-		return sagitariiClass;
+	public SagittariusClass getSagittariusClass() {
+		return sagittariusClass;
 	}
 	
-	public TeapotClass getTeapotClass() {
-		return teapotClass;
+	public ScorpioClass getScorpioClass() {
+		return scorpioClass;
 	}
 	
 	public CoreClass getCoreClass() {
@@ -315,11 +283,14 @@ public class SagittariusFederate {
 	private void join() throws Exception {
 		RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 
-		logger.debug("joing Federation Execution using FOM SagitariiFederation.xml...");
+		logger.debug("joing Federation Execution ...");
 		URL[] joinModules = new URL[]{
-		    (new File(rootPath +  "/foms/SagitariiFederation.xml")).toURI().toURL()
+			(new File(rootPath +  "/foms/zodiac.xml")).toURI().toURL(),	
+		    (new File(rootPath +  "/foms/sagittarius.xml")).toURI().toURL(),
+		    (new File(rootPath +  "/foms/core.xml")).toURI().toURL(),
+		    (new File(rootPath +  "/foms/scorpio.xml")).toURI().toURL()
 		};
-		rtiamb.joinFederationExecution( "Sagitarii", "SagitariiType", "Sagitarii", joinModules );           
+		rtiamb.joinFederationExecution( "Sagittarius", "SagittariusType", "Zodiac", joinModules );           
 	}
 	
 }

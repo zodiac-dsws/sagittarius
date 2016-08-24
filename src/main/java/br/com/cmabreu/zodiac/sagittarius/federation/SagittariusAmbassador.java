@@ -37,8 +37,8 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			if ( SagittariusFederate.getInstance().getCoreClass().objectExists( theObject ) ) {
 				SagittariusFederate.getInstance().getCoreClass().reflectAttributeValues( theAttributes, theObject );
 			} else 
-			if ( SagittariusFederate.getInstance().getTeapotClass().objectExists( theObject ) ) {
-				SagittariusFederate.getInstance().getTeapotClass().reflectAttributeValues( theAttributes, theObject );
+			if ( SagittariusFederate.getInstance().getScorpioClass().objectExists( theObject ) ) {
+				SagittariusFederate.getInstance().getScorpioClass().reflectAttributeValues( theAttributes, theObject );
 			}
 		} catch ( Exception e ) {
 			e.printStackTrace(); 
@@ -57,10 +57,10 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 				}
 			}
 			
-			if ( SagittariusFederate.getInstance().getTeapotClass().isSameOf( theObjectClass ) ) {
+			if ( SagittariusFederate.getInstance().getScorpioClass().isSameOf( theObjectClass ) ) {
 				try {
 					logger.debug("New Teapot object " + theObject + " discovered (" + objectName + ")");
-					SagittariusFederate.getInstance().getTeapotClass().createNew( theObject );
+					SagittariusFederate.getInstance().getScorpioClass().createNew( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
 				}
@@ -75,10 +75,10 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	@Override
 	public void removeObjectInstance(ObjectInstanceHandle theObject, byte[] userSuppliedTag, OrderType sentOrdering, SupplementalRemoveInfo removeInfo)	{
 		try { 
-			if ( SagittariusFederate.getInstance().getTeapotClass().objectExists(theObject) ) {
+			if ( SagittariusFederate.getInstance().getScorpioClass().objectExists(theObject) ) {
 				try {
 					logger.debug("Remove Teapot object " );
-					SagittariusFederate.getInstance().getTeapotClass().remove( theObject );
+					SagittariusFederate.getInstance().getScorpioClass().remove( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
 				}
@@ -105,23 +105,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			byte[] userSuppliedTag, OrderType sentOrdering,	TransportationTypeHandle theTransport, 
 			SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
 		
-		//String tag = new String( userSuppliedTag );
-		
-		try {
-			SagittariusFederate sagitarii = SagittariusFederate.getInstance(); 
-			
-			if ( sagitarii.getRequestTaskInteractionClass().isMe(interactionClass) ) {
-				sagitarii.sendInstancesToNode( theParameters );
-			}
-			
-			if ( sagitarii.getFinishedInstanceInteractionClass().isMe(interactionClass) ) {
-				sagitarii.finishInstance(theParameters);
-			}
-			
-		} catch ( Exception e ) {
-			
-		}
-		
+		// 
 	}
 	
 	

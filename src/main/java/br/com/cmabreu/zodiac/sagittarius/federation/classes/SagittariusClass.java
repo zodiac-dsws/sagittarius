@@ -32,17 +32,21 @@ public class SagittariusClass {
 	}	
 	
 	
-	public SagittariusClass() throws Exception {
-		logger.debug("new server");
-		rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
-
-		classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.SagitariiServer" );
-		attributes = rtiamb.getAttributeHandleSetFactory().create();
-		encodec = new EncoderDecoder();
-		
-		logger.debug("registering attributes");
-		macAddressAttributeHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
-		attributes.add( macAddressAttributeHandle );
+	public SagittariusClass() {
+		try {
+			logger.debug("new server");
+			rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
+	
+			classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.Sagittarius" );
+			attributes = rtiamb.getAttributeHandleSetFactory().create();
+			encodec = new EncoderDecoder();
+			
+			logger.debug("registering attributes");
+			macAddressAttributeHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
+			attributes.add( macAddressAttributeHandle );
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void updateAttributeValues() throws RTIexception {

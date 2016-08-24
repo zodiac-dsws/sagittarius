@@ -13,6 +13,15 @@ public class CoreObject {
 	private String executor = "*";
 	private String executorType = "*";
 	private String ownerNode = "";
+	private String currentInstance = "*";
+	
+	public String getCurrentInstance() {
+		return currentInstance;
+	}
+	
+	public void setCurrentInstance(String currentInstance) {
+		this.currentInstance = currentInstance;
+	}
 	
 	public String getExecutor() {
 		return executor;

@@ -2,7 +2,7 @@ package br.com.cmabreu.zodiac.sagittarius.federation.objects;
 
 import hla.rti1516e.ObjectInstanceHandle;
 
-public class TeapotObject {
+public class ScorpioObject {
 	private long freeMemory;		
 	private long totalMemory;
 	private double cpuLoad;
@@ -31,7 +31,7 @@ public class TeapotObject {
 		return instance;
 	}	
 	
-	public TeapotObject( ObjectInstanceHandle instance ) throws Exception {
+	public ScorpioObject( ObjectInstanceHandle instance ) throws Exception {
 		this.instance = instance;
 	}
 

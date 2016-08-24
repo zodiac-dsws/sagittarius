@@ -30,6 +30,8 @@ public class CoreClass {
 	private AttributeHandle activitySerialHandle;
 	private AttributeHandle executorHandle;
 	private AttributeHandle executorTypeHandle;
+	private AttributeHandle currentInstanceHandle;
+	
 	
 	private AttributeHandleSet attributes;
 	private List<CoreObject> cores;
@@ -97,6 +99,13 @@ public class CoreClass {
 					else if( attributeHandle.equals( executorTypeHandle ) ) {
 						core.setExecutorType( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
+					else if( attributeHandle.equals( currentInstanceHandle ) ) {
+						core.setCurrentInstance( encodec.toString( theAttributes.get(attributeHandle)) );
+						
+						System.out.println("!!!!! WARNING !!!!!");
+						System.out.println("Current Instance has changed its value! Time to verify TASKS to Scorpio");
+						
+					}
 				}
 				/*
 				System.out.println(">>>>>>>>>>>>>>>>>>> " + core.getActivitySerial() + " " + core.getExecutor() + 
@@ -142,7 +151,9 @@ public class CoreClass {
 		this.instanceSerialHandle = rtiamb.getAttributeHandle( classHandle, "InstanceSerial" );
 		this.activitySerialHandle = rtiamb.getAttributeHandle( classHandle, "ActivitySerial" );	
 		this.executorHandle = rtiamb.getAttributeHandle( classHandle, "Executor" );
-		this.executorTypeHandle = rtiamb.getAttributeHandle( classHandle, "ExecutorType" );		
+		this.executorTypeHandle = rtiamb.getAttributeHandle( classHandle, "ExecutorType" );
+		this.currentInstanceHandle = rtiamb.getAttributeHandle( classHandle, "CurrentInstance" );		
+		
 		this.attributes = rtiamb.getAttributeHandleSetFactory().create();
 		
 		attributes.add( isWorkingHandle );
@@ -154,6 +165,7 @@ public class CoreClass {
 		attributes.add( activitySerialHandle );
 		attributes.add( executorHandle );
 		attributes.add( executorTypeHandle );
+		attributes.add( currentInstanceHandle );
 		
 		cores = new ArrayList<CoreObject>();
 		encodec = new EncoderDecoder();

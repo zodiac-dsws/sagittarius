@@ -15,6 +15,8 @@ import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
+import hla.rti1516e.encoding.HLAboolean;
+import hla.rti1516e.encoding.HLAunicodeString;
 import hla.rti1516e.exceptions.RTIexception;
 
 public class CoreClass {
@@ -37,6 +39,13 @@ public class CoreClass {
 	private List<CoreObject> cores;
 	private EncoderDecoder encodec;
 	private Logger logger = LogManager.getLogger( this.getClass().getName() );
+	
+	public void requestCurrentInstanceOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
+		RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
+		AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
+		ahs.add( currentInstanceHandle );
+		rtiamb.attributeOwnershipAcquisition( theObject, ahs, null );
+	}		
 	
 	public List<CoreObject> getCores() {
 		return new ArrayList<CoreObject>(cores);
@@ -65,6 +74,13 @@ public class CoreClass {
 		rtiamb.requestAttributeValueUpdate(coreObjectHandle, attributes, "Request Update".getBytes() );
 		return coreObjectHandle;
 	}
+	
+	public void updateWorkingDataCore( CoreObject core ) throws Exception {
+		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( core.getCurrentInstance() );
+		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
+		attributes.put( currentInstanceHandle, currentInstanceHandleValue.toByteArray() );
+		rtiamb.updateAttributeValues( core.getHandle(), attributes, "Core Working Data".getBytes() );
+	}	
 	
 	public CoreObject reflectAttributeValues( AttributeHandleValueMap theAttributes, ObjectInstanceHandle theObject ) {
 		// Find the Object instance
@@ -100,10 +116,14 @@ public class CoreClass {
 						core.setExecutorType( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
 					else if( attributeHandle.equals( currentInstanceHandle ) ) {
+
+						System.out.println("Current Instance has changed its value! Requesting attribute ownership...");
 						core.setCurrentInstance( encodec.toString( theAttributes.get(attributeHandle)) );
-						
-						System.out.println("!!!!! WARNING !!!!!");
-						System.out.println("Current Instance has changed its value! Time to verify TASKS to Scorpio");
+						try {
+							requestCurrentInstanceOwnerShip( theObject );
+						} catch ( Exception e ) {
+							e.printStackTrace();
+						}
 						
 					}
 				}

@@ -24,6 +24,8 @@ import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
 import br.com.cmabreu.zodiac.sagittarius.types.ExperimentStatus;
 import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
@@ -214,6 +216,7 @@ public class SagittariusFederate {
 	}
 	
 	public void sendInstancesToNode( ParameterHandleValueMap theParameters ) throws Exception {
+		dd
 		/*
 		if ( !nodeSerial.equals("") ) {
 			CoreObject core = coreClass.getCore( nodeSerial );

@@ -3,9 +3,7 @@ package br.com.cmabreu.zodiac.sagittarius.federation.classes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.ScorpioObject;
@@ -34,7 +32,6 @@ public class ScorpioClass {
 	
 	private EncoderDecoder encodec;	
 	private List<ScorpioObject> nodes;
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 
 	public List<ScorpioObject> getNodes() {
 		return new ArrayList<ScorpioObject>( nodes );
@@ -52,7 +49,7 @@ public class ScorpioClass {
 	public void remove( ObjectInstanceHandle objHandle ) {
 		for ( ScorpioObject node : getNodes()  ) {
 			if ( node.isMe(objHandle ) ) {
-				logger.debug( "Node " + node.getMacAddress() + " is offline." );
+				debug( "Node " + node.getMacAddress() + " is offline." );
 				nodes.remove( node );
 				return;
 			}
@@ -60,7 +57,7 @@ public class ScorpioClass {
 	}
 	
 	public ScorpioObject createNew( ObjectInstanceHandle objectHandle ) throws Exception {
-		logger.debug("discovered new Scorpio node");
+		debug("discovered new Scorpio node");
 		ScorpioObject node = new ScorpioObject( objectHandle );
 		nodes.add( node );
 		return node;
@@ -108,12 +105,12 @@ public class ScorpioClass {
 
 	
 	public void publish() throws RTIexception {
-		logger.debug("publish");
+		debug("publish");
 		rtiamb.publishObjectClassAttributes( classHandle, attributes );
 	}
 	
 	public void subscribe() throws RTIexception {
-		logger.debug("subscribe");
+		debug("subscribe");
 		rtiamb.subscribeObjectClassAttributes( classHandle, attributes );		
 	}
 
@@ -156,4 +153,16 @@ public class ScorpioClass {
 		return null;
 	}
 	
+	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 }

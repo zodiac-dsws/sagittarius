@@ -1,8 +1,6 @@
 package br.com.cmabreu.zodiac.sagittarius.federation.classes;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.SagittariusObject;
@@ -21,27 +19,29 @@ public class SagittariusClass {
 	private EncoderDecoder encodec;
 	private AttributeHandleSet attributes;
 	private RTIambassador rtiamb;
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 
 	private SagittariusObject sagittarius;
 	
+	public ObjectInstanceHandle getSagittariusObjectHandle() {
+		return sagittarius.getHandle();
+	}
+	
 	public void createNew() throws RTIexception {
-		logger.debug("new HLA Sagittarius Object instance created");
+		error("new HLA Sagittarius Object instance created");
 		ObjectInstanceHandle handle = rtiamb.registerObjectInstance( classHandle, "Sagittarius" );
 		sagittarius = new SagittariusObject( handle );
 	}	
 	
-	
 	public SagittariusClass() {
 		try {
-			logger.debug("new server");
+			error("new server");
 			rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 	
 			classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.Sagittarius" );
 			attributes = rtiamb.getAttributeHandleSetFactory().create();
 			encodec = new EncoderDecoder();
 			
-			logger.debug("registering attributes");
+			error("registering attributes");
 			macAddressAttributeHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
 			attributes.add( macAddressAttributeHandle );
 		} catch ( Exception e ) {
@@ -50,7 +50,7 @@ public class SagittariusClass {
 	}
 	
 	public void updateAttributeValues() throws RTIexception {
-		logger.debug("updating attributes");
+		error("updating attributes");
 		String macAddress = sagittarius.getMacAddress();
 		ObjectInstanceHandle objectInstanceHandle = sagittarius.getHandle();
 		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
@@ -68,12 +68,24 @@ public class SagittariusClass {
 	}
 	
 	public void publish() throws RTIexception {
-		logger.debug("publish");
+		error("publish");
 		rtiamb.publishObjectClassAttributes( classHandle, attributes );
 	}
 	
 	public void subscribe() throws RTIexception {
 
 	}	
+	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 
 }

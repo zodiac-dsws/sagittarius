@@ -3,9 +3,7 @@ package br.com.cmabreu.zodiac.sagittarius.services;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.entity.Experiment;
 import br.com.cmabreu.zodiac.sagittarius.entity.User;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DatabaseConnectException;
@@ -16,7 +14,6 @@ import br.com.cmabreu.zodiac.sagittarius.repository.ExperimentRepository;
 
 public class ExperimentService {
 	private ExperimentRepository rep;
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 
 	public ExperimentService() throws DatabaseConnectException {
 		this.rep = new ExperimentRepository();
@@ -50,7 +47,7 @@ public class ExperimentService {
 	}
 	
 	public List<Experiment> getRunning() throws NotFoundException {
-		logger.debug("retrieve running experiments");
+		debug("retrieve running experiments");
 		List<Experiment> running = rep.getRunning();
 		try {
 			FragmentService fs = new FragmentService();
@@ -60,21 +57,32 @@ public class ExperimentService {
 		} catch (DatabaseConnectException e) {
 			throw new NotFoundException( e.getMessage() );
 		}
-		logger.debug("done");
+		debug("done");
 		
 		return running;
 	}
 
 	public Set<Experiment> getList() throws NotFoundException {
-		logger.debug("get list");
+		debug("get list");
 		Set<Experiment> preList = rep.getList();
 		return preList;	
 	}
 
 	public Set<Experiment> getList( User user ) throws NotFoundException {
-		logger.debug("get list : user " + user.getLoginName() );
+		debug("get list : user " + user.getLoginName() );
 		Set<Experiment> preList = rep.getList( user );
 		return preList;	
 	}
 
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 }

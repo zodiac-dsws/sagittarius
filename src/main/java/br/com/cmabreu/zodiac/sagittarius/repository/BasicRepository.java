@@ -2,11 +2,10 @@ package br.com.cmabreu.zodiac.sagittarius.repository;
 
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DatabaseConnectException;
 import br.com.cmabreu.zodiac.sagittarius.infra.ConnFactory;
 
@@ -14,11 +13,11 @@ import br.com.cmabreu.zodiac.sagittarius.infra.ConnFactory;
 public class BasicRepository {
 	protected Session session;
 	private Transaction tx = null;
-	protected Logger logger;
+
 	private String sessionId;
 
 	public BasicRepository() throws DatabaseConnectException {
-		logger = LogManager.getLogger( this.getClass().getName() );
+
 		try {
 			session = ConnFactory.getSession();
 			if ( session != null ) {
@@ -28,26 +27,26 @@ public class BasicRepository {
 			}
 		} catch (Exception e ) {
 			e.printStackTrace();
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			throw new DatabaseConnectException( e.getMessage() );
 		}
         UUID uuid = UUID.randomUUID();
         sessionId = uuid.toString().toUpperCase().substring(0,8);
-		logger.debug(" --- open  session " + sessionId + " ---" );
+		debug(" --- open  session " + sessionId + " ---" );
 	}
 	
 
 	public void newTransaction() {
 		if ( !session.isOpen() ) {
-			logger.debug("new transaction for session " + sessionId );
+			debug("new transaction for session " + sessionId );
 			session = ConnFactory.getSession();
 			if ( session != null ) {
 				tx = session.beginTransaction();
 			} else {
-				logger.debug( "Cannot open Database Session" );
+				debug( "Cannot open Database Session" );
 			}
 		} else {
-			logger.debug("will not open a new transaction. session "+sessionId+" is already open");
+			debug("will not open a new transaction. session "+sessionId+" is already open");
 		}
 	}
 	
@@ -56,23 +55,33 @@ public class BasicRepository {
 	}
 	
 	public void closeSession() {
-		logger.debug(" --- close session " + sessionId + " ---" );
+		debug(" --- close session " + sessionId + " ---" );
 		if( isOpen() ) {
 			session.close();
 		} else {
-			logger.debug(" --- session "+sessionId+" is already closed ---" );
+			debug(" --- session "+sessionId+" is already closed ---" );
 		}
 	}
 	
 	public void commit() {
-		logger.debug("commit session " + sessionId );
+		debug("commit session " + sessionId );
 		tx.commit(); 
 	}
 	
 	public void rollBack() {
-		logger.debug("rollback session " + sessionId);
+		debug("rollback session " + sessionId);
 		tx.rollback();
 	}
 	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
 
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}	
 }

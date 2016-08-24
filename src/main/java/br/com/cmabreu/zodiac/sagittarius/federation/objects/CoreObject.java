@@ -1,5 +1,12 @@
 package br.com.cmabreu.zodiac.sagittarius.federation.objects;
 
+import java.util.Calendar;
+
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
+import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
+import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
+import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
+import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class CoreObject {
@@ -15,6 +22,48 @@ public class CoreObject {
 	private String ownerNode = "";
 	private String currentInstance = "*";
 	
+	private String fillInstanceID( Instance instance ) {
+		String content = instance.getContent();
+		try {
+			content = instance.getContent().replace("%ID_PIP%", String.valueOf( instance.getIdInstance() ) );
+		} catch ( Exception e ) {
+			error("Error setting Instance ID to instance content tag.");
+		}
+		return content.replace("##TAG_ID_INSTANCE##", String.valueOf( instance.getIdInstance() ) );
+	}	
+	
+	private String encode( Instance instance ) {
+		instance.setStartDateTime( Calendar.getInstance().getTime() );
+		instance.setStatus( InstanceStatus.WAITING );
+		String content = fillInstanceID ( instance );
+		instance.setContent( content );
+		byte[] respCompressed = ZipUtil.compress( content );
+		String respHex = ZipUtil.toHexString( respCompressed );
+		debug( " > instance "+ instance.getSerial() + " compressed and control tags replaced." );	
+		return respHex;
+	}
+	
+	public boolean getNextInstance() throws Exception {
+		boolean result = false;
+		Instance instance = SagittariusFederate.getInstance().getNextInstance( getOwnerNode() );
+		if ( instance != null ) {
+			currentInstance = encode( instance );
+			result = true;
+		}
+		
+		return result;
+		
+		/*
+			if ( taskType.equals("nunki")) {
+				instance = getNextJoinInstance( core.getOwnerNode() );
+			}
+		*/
+		
+	}
+	
+	// =====================================================================================
+	// COMMON POJO
+	// =====================================================================================
 	public String getCurrentInstance() {
 		return currentInstance;
 	}
@@ -107,5 +156,16 @@ public class CoreObject {
 		this.activitySerial = activitySerial;
 	}
 	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 	
 }

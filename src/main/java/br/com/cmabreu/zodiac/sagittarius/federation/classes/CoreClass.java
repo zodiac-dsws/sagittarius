@@ -3,11 +3,10 @@ package br.com.cmabreu.zodiac.sagittarius.federation.classes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
+import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -15,7 +14,6 @@ import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
-import hla.rti1516e.encoding.HLAboolean;
 import hla.rti1516e.encoding.HLAunicodeString;
 import hla.rti1516e.exceptions.RTIexception;
 
@@ -38,7 +36,6 @@ public class CoreClass {
 	private AttributeHandleSet attributes;
 	private List<CoreObject> cores;
 	private EncoderDecoder encodec;
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 	
 	public void requestCurrentInstanceOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
 		RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
@@ -58,10 +55,36 @@ public class CoreClass {
 		return null;
 	}
 	
+	public void sendInstance( ObjectInstanceHandle theObject ) {
+		
+		try {
+			for ( CoreObject core : getCores()  ) {
+				if ( core.isMe( theObject ) ) {
+					debug("sending instance to " + core.getSerial() );					 
+					if ( core.getNextInstance() ) {
+						updateAttributeValuesObject( core );
+					} else {
+						debug("nothing to send to " + core.getSerial() );
+					}
+				}
+			}
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+	}
+	
+
+	private void updateAttributeValuesObject( CoreObject object ) throws RTIexception {
+		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( object.getCurrentInstance() );
+		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
+		attributes.put( currentInstanceHandle, currentInstanceHandleValue.toByteArray() );
+		rtiamb.updateAttributeValues( object.getHandle(), attributes, "Core Attributes".getBytes() );
+	}	
+	
 	public void remove( ObjectInstanceHandle objHandle ) {
 		for ( CoreObject core : getCores()  ) {
 			if ( core.isMe( objHandle ) ) {
-				logger.debug( "Core " + core.getSerial() + " is offline." );
+				debug( "Core " + core.getSerial() + " is offline." );
 				cores.remove( core );
 				return;
 			}
@@ -116,11 +139,29 @@ public class CoreClass {
 						core.setExecutorType( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
 					else if( attributeHandle.equals( currentInstanceHandle ) ) {
-
-						System.out.println("Current Instance has changed its value! Requesting attribute ownership...");
-						core.setCurrentInstance( encodec.toString( theAttributes.get(attributeHandle)) );
+						
 						try {
-							requestCurrentInstanceOwnerShip( theObject );
+							String content = encodec.toString( theAttributes.get(attributeHandle));
+							core.setCurrentInstance( content );
+							
+							if ( content.equals("*") ) {
+								System.out.println( "Requesting Current Instance ownership" );
+								requestCurrentInstanceOwnerShip( theObject );
+							} else {
+								System.out.println("Current Instance has changed to " + content );
+							}
+							
+							/*
+							ObjectInstanceHandle sagittariusObject = SagittariusFederate.getInstance().getSagittariusObjectHandle();
+							if ( rtiamb.isAttributeOwnedByFederate( sagittariusObject, attributeHandle) ) {
+								System.out.println("Current Instance has changed its value! This attribute is owned by us.");
+								// We've changed this value. This attribute is owned by us. 
+							} else {
+								System.out.println("Current Instance has changed its value! Requesting attribute ownership...");
+								requestCurrentInstanceOwnerShip( theObject );
+							}
+							*/
+							
 						} catch ( Exception e ) {
 							e.printStackTrace();
 						}
@@ -191,16 +232,28 @@ public class CoreClass {
 		encodec = new EncoderDecoder();
 	}
 	
-	public void publish() throws RTIexception {
-		logger.debug("publish");
+	public void publishCurrentInstance() throws RTIexception {
+		debug("publish Core Current Instance Attribute");
+		AttributeHandleSet attributes = rtiamb.getAttributeHandleSetFactory().create();
+		attributes.add( currentInstanceHandle );
 		rtiamb.publishObjectClassAttributes( classHandle, attributes );
 	}
 	
+	/*
+	public void publish() throws RTIexception {
+		debug("publish Core Attributes");
+		rtiamb.publishObjectClassAttributes( classHandle, attributes );
+	}
+	*/
+	
 	public void subscribe() throws RTIexception {
-		logger.debug("subscribe");
+		debug("subscribe");
 		rtiamb.subscribeObjectClassAttributes( classHandle, attributes );		
 	}
 
-	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
 	
 }

@@ -25,7 +25,6 @@ public class Main {
 
 
     public static void main( String[] args ) {
-
     	System.out.println("Starting Sagittarius...");
     	new Main().initialize();
     	
@@ -36,6 +35,8 @@ public class Main {
     	try {
     		int interval = 5;
     		int maxInputBufferCapacity = 500;
+    		
+    		Logger.getInstance().enable();
        
 			Configurator config = Configurator.getInstance("config.xml");
 			config.loadMainConfig();

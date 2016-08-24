@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.entity.Activity;
 import br.com.cmabreu.zodiac.sagittarius.entity.Fragment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Relation;
@@ -14,17 +15,15 @@ import br.com.cmabreu.zodiac.sagittarius.exceptions.UpdateException;
 import br.com.cmabreu.zodiac.sagittarius.infra.DaoFactory;
 import br.com.cmabreu.zodiac.sagittarius.infra.IDao;
 
-
-
 public class FragmentRepository extends BasicRepository {
 
 	public FragmentRepository() throws DatabaseConnectException {
 		super();
-		logger.debug("init");
+		debug("init");
 	}
 	
 	public List<Fragment> getList( int idExperiment ) throws NotFoundException {
-		logger.debug("get fragment list" );
+		debug("get fragment list" );
 		DaoFactory<Fragment> df = new DaoFactory<Fragment>();
 		IDao<Fragment> fm = df.getDao(this.session, Fragment.class);
 		List<Fragment> fragments = null;
@@ -35,32 +34,32 @@ public class FragmentRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + fragments.size() + " fragments.");
+		debug("done: " + fragments.size() + " fragments.");
 		return fragments;
 	}
 
 	
 	public Fragment insertFragment(Fragment fragment) throws InsertException {
-		logger.debug("insert");
+		debug("insert");
 		DaoFactory<Fragment> df = new DaoFactory<Fragment>();
 		IDao<Fragment> fm = df.getDao(this.session, Fragment.class);
 		try {
 			fm.insertDO(fragment);
 			commit();
 		} catch (Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw new InsertException(e.getMessage());
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 		return fragment;
 	}
 
 	
 	public void insertFragmentList( List<Fragment> fragmentList ) throws InsertException {
-		logger.debug("insert");
+		debug("insert");
 		DaoFactory<Fragment> df = new DaoFactory<Fragment>();
 		IDao<Fragment> fm = df.getDao(this.session, Fragment.class);
 		try {
@@ -69,12 +68,12 @@ public class FragmentRepository extends BasicRepository {
 				DaoFactory<Relation> dfr = new DaoFactory<Relation>();
 				IDao<Relation> fmr = dfr.getDao(this.session, Relation.class);
 				
-				logger.debug("fragment " + fragment.getSerial() + " : ");
+				debug("fragment " + fragment.getSerial() + " : ");
 				for ( Activity act : fragment.getActivities() ) {
-					logger.debug(" > activity " + act.getTag() );
+					debug(" > activity " + act.getTag() );
 					Set<Relation> inputRelations = new HashSet<Relation>();
 					for ( Relation rel : act.getInputRelations() ) {
-						logger.debug("  > input " + rel.getName() );
+						debug("  > input " + rel.getName() );
 						inputRelations.add( fmr.getDO( rel.getIdTable() ) );
 					}
 					act.setInputRelations(inputRelations);
@@ -83,34 +82,34 @@ public class FragmentRepository extends BasicRepository {
 			}
 			commit();
 		} catch (Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw new InsertException(e.getMessage());
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 	}
 	
 	public void updateFragment( Fragment fragment ) throws UpdateException {
-		logger.debug("update");
+		debug("update");
 		DaoFactory<Fragment> df = new DaoFactory<Fragment>();
 		IDao<Fragment> fm = df.getDao(this.session, Fragment.class);
 		try {
 			fm.updateDO(fragment);
 			commit();
 		} catch (UpdateException e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw e;
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 	}	
 	
 	public Fragment getFragment(int idFragment) throws NotFoundException {
-		logger.debug("retrieve");
+		debug("retrieve");
 		DaoFactory<Fragment> df = new DaoFactory<Fragment>();
 		IDao<Fragment> fm = df.getDao(this.session, Fragment.class);
 		Fragment fragment = null;
@@ -121,8 +120,20 @@ public class FragmentRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 		return fragment;
 	}
 
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
+	
 }

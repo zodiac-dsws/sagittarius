@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Queue;
 
 import org.apache.hadoop.yarn.webapp.NotFoundException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import br.com.cmabreu.zodiac.sagittarius.core.instances.InstanceList;
 import br.com.cmabreu.zodiac.sagittarius.core.instances.InstanceListContainer;
@@ -25,7 +23,6 @@ public class InstanceBuffer {
 	private Queue<Instance> instanceInputBuffer;
 	private Queue<Instance> instanceJoinInputBuffer;
 	private Queue<Instance> instanceOutputBuffer;
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 	private List<Experiment> runningExperiments;
 	
 	public List<Experiment> getRunningExperiments() {
@@ -37,17 +34,17 @@ public class InstanceBuffer {
 	}
 	
 	private synchronized void processAndInclude( List<Instance> preBuffer ) {
-		logger.debug("collecting instances from database to buffers...");
+		debug("collecting instances from database to buffers...");
 		for( Instance instance : preBuffer ) {
 			if( instance.getType().isJoin() ) {
-				logger.debug("JB > " + instance.getSerial() + " " + instance.getType() );
+				debug("JB > " + instance.getSerial() + " " + instance.getType() );
 				instanceJoinInputBuffer.add(instance);
 			} else {
-				logger.debug("CB > " + instance.getSerial() + " " + instance.getType() );
+				debug("CB > " + instance.getSerial() + " " + instance.getType() );
 				instanceInputBuffer.add(instance);
 			}
 		}
-		logger.debug("done.");
+		debug("done.");
 	}
 	
 	public synchronized void loadBuffers() throws Exception {
@@ -57,31 +54,31 @@ public class InstanceBuffer {
 
 		if ( getInstanceInputBufferSize() < ( bufferSize / 3 ) ) {
 			InstanceListContainer listContainer = new InstanceListContainer();
-			logger.debug("check COMMON buffer because buffer is at " + getInstanceInputBufferSize() );
+			debug("check COMMON buffer because buffer is at " + getInstanceInputBufferSize() );
 			sliceSize = ( bufferSize - getInstanceInputBufferSize() ) / runningExperimentCount + 1;
 			for ( Experiment experiment : getRunningExperiments() ) {
 				
 				if ( experiment.getStatus() != ExperimentStatus.PAUSED ) {
-					logger.debug("loading Common Instances for experiment " + experiment.getTagExec() + ". Slice size: " + sliceSize );
+					debug("loading Common Instances for experiment " + experiment.getTagExec() + ". Slice size: " + sliceSize );
 					List<Instance> common = loadCommonBuffer( sliceSize, experiment );
 					if ( common != null ) {
-						logger.debug("found " + common.size() + " instances. Adding to container...");
+						debug("found " + common.size() + " instances. Adding to container...");
 						listContainer.addList( new InstanceList(common, experiment.getTagExec()) );
 					}
 				} else {
-					logger.debug("experiment " + experiment.getTagExec() + " is paused. will ignore..." );
+					debug("experiment " + experiment.getTagExec() + " is paused. will ignore..." );
 				}
 				
 			}
 			try {
 				if ( listContainer.size() > 0 ) {
-					logger.debug("container have " + listContainer.size() + " instance list. Merging...");
+					debug("container have " + listContainer.size() + " instance list. Merging...");
 					List<Instance> instances = listContainer.merge();
 					instanceInputBuffer.addAll( instances );
 				} else {
-					logger.error("container is empty. Something VERY wrong happen. ");
+					error("container is empty. Something VERY wrong happen. ");
 				}
-				logger.debug("common buffer size: " + instanceInputBuffer.size() );
+				debug("common buffer size: " + instanceInputBuffer.size() );
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
@@ -90,24 +87,24 @@ public class InstanceBuffer {
 	
 		if ( getInstanceJoinInputBufferSize() < ( bufferSize / 5 ) ) {
 			InstanceListContainer listContainerS = new InstanceListContainer();
-			logger.debug("check SELECT buffer...");
+			debug("check SELECT buffer...");
 			sliceSize = ( bufferSize - getInstanceJoinInputBufferSize() ) / runningExperimentCount + 1;
 			for ( Experiment experiment : getRunningExperiments() ) {
-				logger.debug(" > " + experiment.getTagExec() + " " + experiment.getStatus() );
+				debug(" > " + experiment.getTagExec() + " " + experiment.getStatus() );
 				if ( experiment.getStatus() != ExperimentStatus.PAUSED ) {
-					logger.debug("loading SELECT Instances for experiment " + experiment.getTagExec() );
+					debug("loading SELECT Instances for experiment " + experiment.getTagExec() );
 					List<Instance> select = loadJoinBuffer( sliceSize, experiment); 
 					if ( select != null ) {
 						listContainerS.addList( new InstanceList(select, experiment.getTagExec()) );
 					} 
 				} else {
-					logger.debug("experiment " + experiment.getTagExec() + " is paused. will ignore..." );
+					debug("experiment " + experiment.getTagExec() + " is paused. will ignore..." );
 				}
 			}
 			if ( listContainerS.size() > 0 ) {
 				instanceJoinInputBuffer.addAll( listContainerS.merge() );
 			}
-			logger.debug("SELECT buffer size: " + instanceJoinInputBuffer.size() );
+			debug("SELECT buffer size: " + instanceJoinInputBuffer.size() );
 		}
 		
 	}
@@ -124,9 +121,9 @@ public class InstanceBuffer {
 	private synchronized Instance getNextInstance( String macAddress) {
 		Instance instance = getNextInstance( getRunningExperiments(), macAddress );
 		if ( instance != null ) {
-			logger.debug("serving instance " + instance.getSerial() + " to " + macAddress );
+			debug("serving instance " + instance.getSerial() + " to " + macAddress );
 		} else {
-			logger.debug("null instance");
+			debug("null instance");
 		}
 		return instance;
 	}
@@ -137,7 +134,7 @@ public class InstanceBuffer {
 		Instance next = instanceInputBuffer.poll();
 		if ( next != null ) {
 			if ( next.getType() == ActivityType.SELECT ) {
-				logger.error("SELECT type Instance in common buffer!");
+				error("SELECT type Instance in common buffer!");
 			} else {
 				if ( hasOwner(next) ) {
 					instanceOutputBuffer.add( next );
@@ -146,7 +143,7 @@ public class InstanceBuffer {
 				}
 			}
 		} else {
-			//logger.debug("empty output buffer.");
+			//debug("empty output buffer.");
 		}
 		return next;
 	}
@@ -208,41 +205,41 @@ public class InstanceBuffer {
 	
 	public synchronized void reloadAfterCrash( List<Experiment> runningExperiments ) {
 		this.runningExperiments = runningExperiments;
-		logger.debug("after crash reloading " + runningExperiments.size() + " experiments.");
+		debug("after crash reloading " + runningExperiments.size() + " experiments.");
 		try {
 			try {
 				InstanceService instanceService = new InstanceService();
 				processAndInclude( instanceService.recoverFromCrash() );
-				logger.debug( getInstanceInputBufferSize() + " common instances recovered.");
-				logger.debug( getInstanceJoinInputBufferSize() + " JOIN instances recovered.");
+				debug( getInstanceInputBufferSize() + " common instances recovered.");
+				debug( getInstanceJoinInputBufferSize() + " JOIN instances recovered.");
 			} catch ( NotFoundException e ) {
-				logger.debug("no instances to recover");
+				debug("no instances to recover");
 			}
 			
 		} catch ( Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 		} 
-		logger.debug("after crash reload done.");
+		debug("after crash reload done.");
 	}
 	
 	public synchronized Instance getNextJoinInstance( String macAddress ) {
 		Instance next = instanceJoinInputBuffer.poll();
 		if ( next != null ) {
-			logger.debug("serving SELECT instance " + next.getSerial() + " to " + macAddress );
+			debug("serving SELECT instance " + next.getSerial() + " to " + macAddress );
 			instanceOutputBuffer.add(next);
 		}
 		return next;
 	}
 
 	public synchronized void returnToBuffer( Instance instance ) {
-		logger.debug("instance refund: " + instance.getSerial() );
+		debug("instance refund: " + instance.getSerial() );
 		if ( instanceOutputBuffer.remove( instance ) ) {
 			if ( instance.getType().isJoin() ) {
 				instanceJoinInputBuffer.add( instance );
-				logger.debug(" > to the join buffer" );
+				debug(" > to the join buffer" );
 			} else {
 				instanceInputBuffer.add( instance );
-				logger.debug(" > to the common buffer" );
+				debug(" > to the common buffer" );
 			}
 		}
 	}
@@ -259,7 +256,7 @@ public class InstanceBuffer {
 				}
 			}
 		}
-		logger.warn("owner of instance " + instance.getSerial() + " not found. Will discard this instance.");
+		warn("owner of instance " + instance.getSerial() + " not found. Will discard this instance.");
 		return false;
 	}
 	
@@ -286,49 +283,59 @@ public class InstanceBuffer {
 	
 	private List<Instance> loadJoinBuffer( int count, Experiment experiment ) {
 		List<Instance> preBuffer = null;
-		logger.debug("loading SELECT buffer. current size: " + instanceJoinInputBuffer.size());
+		debug("loading SELECT buffer. current size: " + instanceJoinInputBuffer.size());
 		try {
 			Fragment running = getRunningFragment( experiment );
 			if ( running == null ) {
-				logger.debug("no SELECT fragments running");
+				debug("no SELECT fragments running");
 			} else {
-				logger.debug("running SELECT fragment found: " + running.getSerial() );
+				debug("running SELECT fragment found: " + running.getSerial() );
 				try {
 					InstanceService ps = new InstanceService();
 					preBuffer = ps.getHeadJoin( count, running.getIdFragment() );
-					logger.debug("found " + preBuffer.size() + " Instances for experiment " + experiment.getTagExec() + " Fragment " +
+					debug("found " + preBuffer.size() + " Instances for experiment " + experiment.getTagExec() + " Fragment " +
 					 running.getSerial() );
 				} catch (NotFoundException e) {
-					logger.debug("no more SELECT instances found in database for experiment " + experiment.getTagExec() +
+					debug("no more SELECT instances found in database for experiment " + experiment.getTagExec() +
 							" Fragment " + running.getSerial() );
 				}
 			}
 		} catch (Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 		}
 		return preBuffer;
 	}
 
 	private List<Instance> loadCommonBuffer( int count, Experiment experiment ) {
 		List<Instance> preBuffer = null;
-		logger.debug("loading common buffer...");
+		debug("loading common buffer...");
 		try {
 			Fragment running = getRunningFragment( experiment );
 			if ( running == null ) {
-				logger.debug("no fragments running");
+				debug("no fragments running");
 			} else {
-				logger.debug("running fragment found: " + running.getSerial() );
+				debug("running fragment found: " + running.getSerial() );
 				InstanceService ps = new InstanceService();
 				preBuffer = ps.getHead( count, running.getIdFragment() );
 			}
 		} catch (NotFoundException e) {
-			logger.debug("no running instances found for experiment " + experiment.getTagExec() );
+			debug("no running instances found for experiment " + experiment.getTagExec() );
 		} catch ( Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 		} 
 		return preBuffer;
 	}
 	
 	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
 
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}	
 }

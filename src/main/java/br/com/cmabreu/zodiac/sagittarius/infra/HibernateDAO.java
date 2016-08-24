@@ -6,14 +6,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.hibernate.transform.Transformers;
 
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DeleteException;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.InsertException;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.NotFoundException;
@@ -24,14 +23,13 @@ import br.com.cmabreu.zodiac.sagittarius.exceptions.UpdateException;
 public class HibernateDAO<T> implements IDao<T>  {
 	private Class<T> classe;
 	private Session session;
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 	private String sqlDLL;
 	private boolean globalWithCommit;
 	private long startTime;    
 	private long estimatedTime;	
 	
 	public HibernateDAO(Session session, Class<T> classe) {
-		logger.debug("open DAO for entity " + classe.getSimpleName() );
+		debug("open DAO for entity " + classe.getSimpleName() );
 		this.session = session;
 		this.classe = classe;
 		startTime = System.nanoTime();
@@ -42,7 +40,7 @@ public class HibernateDAO<T> implements IDao<T>  {
 	}
 
 	public int insertDO(T objeto) throws InsertException {
-		logger.debug("insert");
+		debug("insert");
 		int res = -1;
 		try { 
 			res = (Integer)session.save(objeto);
@@ -54,7 +52,7 @@ public class HibernateDAO<T> implements IDao<T>  {
 			throw new InsertException("Unknown error by insert in " + this.classe.getSimpleName() );
 		}
 		estimatedTime = System.nanoTime() - startTime;
-		logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+		debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 		
 		postClose();
 		return res;		
@@ -62,11 +60,11 @@ public class HibernateDAO<T> implements IDao<T>  {
 
 
 	public int getCount(String tableName, String criteria) throws Exception {
-		logger.debug("get count " + tableName + " " + criteria );
+		debug("get count " + tableName + " " + criteria );
         Query query = session.createSQLQuery( "select count(*) from " + tableName + " " + criteria );
         Integer retorno = ( (BigInteger)query.uniqueResult() ).intValue();
 		estimatedTime = System.nanoTime() - startTime;
-		logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+		debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 		
 		postClose();
         return retorno;
@@ -74,12 +72,12 @@ public class HibernateDAO<T> implements IDao<T>  {
 
 	
 	public List<?> genericAccess(String hql) throws Exception {
-		logger.debug("access");
+		debug("access");
         Query query = session.createSQLQuery(hql);
         //Each row is a list of properties in the query
         List<?> rows = query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
 		estimatedTime = System.nanoTime() - startTime;
-		logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+		debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 		
 		postClose();
         return rows;
@@ -87,7 +85,7 @@ public class HibernateDAO<T> implements IDao<T>  {
 
 
 	public void executeQuery(String hql, boolean withCommit) throws Exception {
-		logger.debug("query");
+		debug("query");
 		sqlDLL = hql;
 		globalWithCommit = withCommit;
 		session.doWork(new Work() {
@@ -100,13 +98,13 @@ public class HibernateDAO<T> implements IDao<T>  {
 			    	try {
 			    		connection.commit();
 			    	} catch ( Exception ignored ) {
-			    		logger.error( ignored.getMessage() );
+			    		error( ignored.getMessage() );
 			    	} finally {
-				    	try { st.close(); } catch ( Exception e ) { logger.error( e.getMessage() );}
+				    	try { st.close(); } catch ( Exception e ) { error( e.getMessage() );}
 			    		connection.close();
 			    	}
 		    	}
-				logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+				debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 				
 				postClose();
 		    }
@@ -116,7 +114,7 @@ public class HibernateDAO<T> implements IDao<T>  {
 	
 	
 	public void deleteDO(T objeto) throws DeleteException {
-		logger.debug("delete");
+		debug("delete");
 		try {
 			session.delete(objeto);
 		} catch (HibernateException e) {
@@ -124,14 +122,14 @@ public class HibernateDAO<T> implements IDao<T>  {
 			throw new DeleteException( e.getMessage() );
 		} 				
 		estimatedTime = System.nanoTime() - startTime;
-		logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+		debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 		
 		postClose();
 	}
 	
 
 	public void updateDO(T objeto) throws UpdateException {
-		logger.debug("update");
+		debug("update");
 		try {
 			session.saveOrUpdate(objeto);
 		} catch (HibernateException e) {
@@ -139,7 +137,7 @@ public class HibernateDAO<T> implements IDao<T>  {
 			throw new UpdateException( e.getMessage() );
 		} 			
 		estimatedTime = System.nanoTime() - startTime;
-		logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+		debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 		
 		postClose();
 	}
@@ -147,17 +145,17 @@ public class HibernateDAO<T> implements IDao<T>  {
 
 	@SuppressWarnings("unchecked")
 	public List<T> getList(String criteria) throws NotFoundException {
-		logger.debug("list");
+		debug("list");
 		try {
 			List<T> retorno;
 			retorno = (List<T>)session.createSQLQuery(criteria).addEntity(this.classe).list(); 
 			if ( retorno.size() == 0 ) {
-				logger.debug("empty list");
+				debug("empty list");
 				postClose();
 				throw new NotFoundException("No records found for entity " + this.classe);
 			}
 			estimatedTime = System.nanoTime() - startTime;
-			logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+			debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 			
 			postClose();
 			return retorno;
@@ -169,18 +167,30 @@ public class HibernateDAO<T> implements IDao<T>  {
 
 	@SuppressWarnings("unchecked")
 	public T getDO(int id) throws NotFoundException {
-		logger.debug("retrieve");
+		debug("retrieve");
 		Object objeto = session.get(classe, id);
 		if ( objeto == null ){
 			postClose();
 			throw new  NotFoundException(classe.getSimpleName() + ": ID " + id + " not found.");
 		}
 		estimatedTime = System.nanoTime() - startTime;
-		logger.debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
+		debug("DAO finished in " + estimatedTime / 1000000000.0 + " seconds");
 		
 		postClose();
 		return (T)objeto;		
 	}
+	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 
 
 }

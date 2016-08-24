@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.entity.Experiment;
 import br.com.cmabreu.zodiac.sagittarius.entity.User;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DatabaseConnectException;
@@ -14,13 +15,11 @@ import br.com.cmabreu.zodiac.sagittarius.exceptions.UpdateException;
 import br.com.cmabreu.zodiac.sagittarius.infra.DaoFactory;
 import br.com.cmabreu.zodiac.sagittarius.infra.IDao;
 
-
-
 public class ExperimentRepository extends BasicRepository {
 
 	public ExperimentRepository() throws DatabaseConnectException {
 		super();
-		logger.debug("init");
+		debug("init");
 	}
 
 
@@ -30,9 +29,9 @@ public class ExperimentRepository extends BasicRepository {
 	
 	public Set<Experiment> getList( User user ) throws NotFoundException {
 		if ( user == null ) {
-			logger.debug("get list for no user" );
+			debug("get list for no user" );
 		} else {
-			logger.debug("get list for user " + user.getLoginName() );
+			debug("get list for user " + user.getLoginName() );
 		}
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
@@ -48,7 +47,7 @@ public class ExperimentRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + experiments.size() + " experiments.");
+		debug("done: " + experiments.size() + " experiments.");
 		
 		for ( Experiment experiment : experiments ) {
 			experiment.updateMetrics();
@@ -59,7 +58,7 @@ public class ExperimentRepository extends BasicRepository {
 
 
 	public List<Experiment> getRunning() throws NotFoundException {
-		logger.debug("retrieve pendent" );
+		debug("retrieve pendent" );
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
 		List<Experiment> running = null;
@@ -70,7 +69,7 @@ public class ExperimentRepository extends BasicRepository {
 			throw e;
 		} 
 		closeSession();		
-		logger.debug("done");
+		debug("done");
 		for ( Experiment experiment : running ) {
 			experiment.updateMetrics();
 		}
@@ -79,24 +78,24 @@ public class ExperimentRepository extends BasicRepository {
 	
 	
 	public void updateExperiment( Experiment experiment ) throws UpdateException {
-		logger.debug("update");
+		debug("update");
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
 		try {
 			fm.updateDO(experiment);
 			commit();
 		} catch (UpdateException e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw e;
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 	}
 	
 	public Experiment insertExperiment(Experiment experiment) throws InsertException {
-		logger.debug("insert");
+		debug("insert");
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
 		try {
@@ -105,17 +104,17 @@ public class ExperimentRepository extends BasicRepository {
 		} catch (InsertException e) {
 			rollBack();
 			closeSession();
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			throw e;
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 		return experiment;
 	}
 	
 	
 	public Experiment getExperiment(String tag) throws NotFoundException {
-		logger.debug("retrieving experiment by TAG " + tag + "..." );
+		debug("retrieving experiment by TAG " + tag + "..." );
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
 		Experiment experiment = null;
@@ -125,14 +124,14 @@ public class ExperimentRepository extends BasicRepository {
 			closeSession();		
 			throw e;
 		} 
-		logger.debug("done");
+		debug("done");
 		closeSession();
 		return experiment;
 	}
 	
 	
 	public Experiment getExperiment(int idExperiment) throws NotFoundException {
-		logger.debug("retrieving experiment " + idExperiment + "...");
+		debug("retrieving experiment " + idExperiment + "...");
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
 		Experiment experiment = null;
@@ -143,13 +142,13 @@ public class ExperimentRepository extends BasicRepository {
 			throw e;
 		} 
 		closeSession();		
-		logger.debug("done: " + experiment.getTagExec() );
+		debug("done: " + experiment.getTagExec() );
 		return experiment;
 	}
 	
 
 	public void deleteExperiment(Experiment experiment) throws DeleteException {
-		logger.debug("delete" );
+		debug("delete" );
 		DaoFactory<Experiment> df = new DaoFactory<Experiment>();
 		IDao<Experiment> fm = df.getDao(this.session, Experiment.class);
 		try {
@@ -158,11 +157,23 @@ public class ExperimentRepository extends BasicRepository {
 		} catch (DeleteException e) {
 			rollBack();
 			closeSession();
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			throw e;			
 		}
-		logger.debug("done");
+		debug("done");
 		closeSession();
 	}	
+	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 	
 }

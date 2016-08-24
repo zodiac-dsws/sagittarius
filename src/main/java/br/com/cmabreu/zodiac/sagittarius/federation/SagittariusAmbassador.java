@@ -1,9 +1,8 @@
 package br.com.cmabreu.zodiac.sagittarius.federation;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
+import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
@@ -17,7 +16,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 
 public class SagittariusAmbassador extends NullFederateAmbassador {
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
+	
 
 	@Override
 	public void reflectAttributeValues( ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes,
@@ -33,24 +32,30 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	public void reflectAttributeValues( ObjectInstanceHandle theObject,  AttributeHandleValueMap theAttributes,
 	                                    byte[] tag,  OrderType sentOrdering, TransportationTypeHandle theTransport,
 	                                    LogicalTime time,  OrderType receivedOrdering, SupplementalReflectInfo reflectInfo ) throws FederateInternalError {
+
 		try {
-			if ( SagittariusFederate.getInstance().getCoreClass().objectExists( theObject ) ) {
-				SagittariusFederate.getInstance().getCoreClass().reflectAttributeValues( theAttributes, theObject );
-			} else 
-			if ( SagittariusFederate.getInstance().getScorpioClass().objectExists( theObject ) ) {
-				SagittariusFederate.getInstance().getScorpioClass().reflectAttributeValues( theAttributes, theObject );
-			}
+			SagittariusFederate.getInstance().reflectAttributeUpdate( theObject, theAttributes );
 		} catch ( Exception e ) {
-			e.printStackTrace(); 
+			e.printStackTrace();
 		}
+		
 	}
+	
+	@Override
+    public void requestAttributeOwnershipRelease( ObjectInstanceHandle theObject, AttributeHandleSet candidateAttributes, byte[] userSuppliedTag) throws FederateInternalError {
+		try {
+			SagittariusFederate.getInstance().releaseAttributeOwnership(theObject, candidateAttributes);
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+    }		
 	
 	@Override
 	public void discoverObjectInstance( ObjectInstanceHandle theObject, ObjectClassHandle theObjectClass, String objectName ) throws FederateInternalError {
 		try {
 			if ( SagittariusFederate.getInstance().getCoreClass().isSameOf( theObjectClass ) ) {
 				try {
-					logger.debug("New Core object " + theObject + " discovered (" + objectName + ")");
+					debug("New Core object " + theObject + " discovered (" + objectName + ")");
 					SagittariusFederate.getInstance().getCoreClass().createNew( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -59,7 +64,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			
 			if ( SagittariusFederate.getInstance().getScorpioClass().isSameOf( theObjectClass ) ) {
 				try {
-					logger.debug("New Teapot object " + theObject + " discovered (" + objectName + ")");
+					debug("New Scorpio object " + theObject + " discovered (" + objectName + ")");
 					SagittariusFederate.getInstance().getScorpioClass().createNew( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -67,17 +72,27 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			}
 			
 		} catch ( Exception e ) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 		}
 		
 	}
+	
+	@Override
+	public void attributeOwnershipAcquisitionNotification(	ObjectInstanceHandle theObject,	AttributeHandleSet securedAttributes, byte[] userSuppliedTag) throws FederateInternalError {
+		try {
+			SagittariusFederate.getInstance().attributeOwnershipAcquisitionNotification( theObject, securedAttributes );
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+	}	
+	
 	
 	@Override
 	public void removeObjectInstance(ObjectInstanceHandle theObject, byte[] userSuppliedTag, OrderType sentOrdering, SupplementalRemoveInfo removeInfo)	{
 		try { 
 			if ( SagittariusFederate.getInstance().getScorpioClass().objectExists(theObject) ) {
 				try {
-					logger.debug("Remove Teapot object " );
+					debug("Remove Scorpio object " );
 					SagittariusFederate.getInstance().getScorpioClass().remove( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -87,7 +102,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			
 			if ( SagittariusFederate.getInstance().getCoreClass().objectExists(theObject) ) {
 				try {
-					logger.debug("Remove Core object " );
+					debug("Remove Core object " );
 					SagittariusFederate.getInstance().getCoreClass().remove( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -108,6 +123,16 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 		// 
 	}
 	
-	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 	
 }

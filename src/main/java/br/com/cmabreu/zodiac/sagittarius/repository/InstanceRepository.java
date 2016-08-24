@@ -2,6 +2,7 @@ package br.com.cmabreu.zodiac.sagittarius.repository;
 
 import java.util.List;
 
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DatabaseConnectException;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DeleteException;
@@ -17,12 +18,12 @@ public class InstanceRepository extends BasicRepository {
 
 	public InstanceRepository() throws DatabaseConnectException {
 		super();
-		logger.debug("init");
+		debug("init");
 	}
 
 	
 	public List<Instance> recoverFromCrash() throws Exception {
-		logger.debug("recovering common instances" );
+		debug("recovering common instances" );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
@@ -33,13 +34,13 @@ public class InstanceRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + pipes.size() + " instances.");
+		debug("done: " + pipes.size() + " instances.");
 		return pipes;
 	}
 	
 	
 	public List<Instance> getHead( int howMany, int idFragment ) throws Exception {
-		logger.debug("get first " + howMany + " records for fragment " + idFragment );
+		debug("get first " + howMany + " records for fragment " + idFragment );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
@@ -58,14 +59,14 @@ public class InstanceRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + pipes.size() + " instances.");
+		debug("done: " + pipes.size() + " instances.");
 		return pipes;
 	}
 
 	
 	public List<Instance> getHeadJoin( int howMany, int idFragment ) throws Exception {
-		logger.debug("get first " + howMany + " JOIN records for fragment " + idFragment );
-		logger.debug("get first " + howMany + " records" );
+		debug("get first " + howMany + " JOIN records for fragment " + idFragment );
+		debug("get first " + howMany + " records" );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
@@ -84,13 +85,13 @@ public class InstanceRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + pipes.size() + " instances.");
+		debug("done: " + pipes.size() + " instances.");
 		return pipes;		
 		
 	}
 
 	public List<Instance> getPipelinedList( int idFragment ) throws NotFoundException {
-		logger.debug("get list" );
+		debug("get list" );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
@@ -101,12 +102,12 @@ public class InstanceRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + pipes.size() + " instances.");
+		debug("done: " + pipes.size() + " instances.");
 		return pipes;
 	}
 	
 	public List<Instance> getList( int idFragment ) throws NotFoundException {
-		logger.debug("get list" );
+		debug("get list" );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
@@ -117,31 +118,31 @@ public class InstanceRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done: " + pipes.size() + " instances.");
+		debug("done: " + pipes.size() + " instances.");
 		return pipes;
 	}
 	
 	public Instance insertInstance(Instance instance) throws InsertException {
-		logger.debug("insert");
+		debug("insert");
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		try {
 			fm.insertDO(instance);
 			commit();
 		} catch (Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw new InsertException(e.getMessage());
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 		return instance;
 	}
 
 	
 	public void insertInstanceList( List<Instance> pipes ) throws InsertException {
-		logger.debug("insert list");
+		debug("insert list");
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		try {
@@ -150,17 +151,17 @@ public class InstanceRepository extends BasicRepository {
 			}
 			commit();
 		} catch (Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw new InsertException(e.getMessage());
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 	}
 	
 	public Instance getInstance(String serial) throws NotFoundException {
-		logger.debug("retrieving instance by serial " + serial + "..." );
+		debug("retrieving instance by serial " + serial + "..." );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		Instance instance = null;
@@ -170,30 +171,30 @@ public class InstanceRepository extends BasicRepository {
 			closeSession();		
 			throw e;
 		} 
-		logger.debug("done");
+		debug("done");
 		closeSession();
 		return instance;
 	}
 	
 	public void deleteInstance(Instance instance) throws DeleteException {
-		logger.debug("delete instance." );
+		debug("delete instance." );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		try {
 			fm.deleteDO(instance);
 			commit();
 		} catch (Exception e) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw new DeleteException( e.getMessage() );			
 		}
-		logger.debug("done.");
+		debug("done.");
 		closeSession();
 	}
 	
 	public Instance getInstance(int idInstance) throws NotFoundException {
-		logger.debug("retrieve");
+		debug("retrieve");
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		Instance instance = null;
@@ -204,12 +205,12 @@ public class InstanceRepository extends BasicRepository {
 			throw e;
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 		return instance;
 	}
 	
 	public void updateInstance( Instance instance ) throws UpdateException {
-		logger.debug("update");
+		debug("update");
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		try {
@@ -219,13 +220,20 @@ public class InstanceRepository extends BasicRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 			
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			rollBack();
 			closeSession();
 			throw new UpdateException( e.getMessage() );
 		}
 		closeSession();
-		logger.debug("done");
+		debug("done");
 	}
 
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}		
 }

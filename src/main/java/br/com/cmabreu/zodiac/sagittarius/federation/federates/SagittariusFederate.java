@@ -3,15 +3,12 @@ package br.com.cmabreu.zodiac.sagittarius.federation.federates;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import br.com.cmabreu.zodiac.sagittarius.core.InstanceBuffer;
+import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.entity.Experiment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
@@ -20,11 +17,10 @@ import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
 import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
-import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
 import br.com.cmabreu.zodiac.sagittarius.types.ExperimentStatus;
-import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
 import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RTIambassador;
@@ -35,8 +31,6 @@ import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 
 public class SagittariusFederate {
 	private static SagittariusFederate instance;
-	
-	private Logger logger = LogManager.getLogger( this.getClass().getName() );
 	private String rootPath;
 	private SagittariusClass sagittariusClass;
 	private ScorpioClass scorpioClass;
@@ -45,8 +39,6 @@ public class SagittariusFederate {
 	// ==== OLD SAGITARII ========================
 	private InstanceBuffer instanceBuffer;
 	private List<Experiment> runningExperiments;
-	
-	// ========================= OLD SAGITARII STUFF ================================
 	
 	public void loadBuffers() throws Exception {
 		instanceBuffer.loadBuffers();
@@ -91,23 +83,23 @@ public class SagittariusFederate {
 	
 	public synchronized void finishInstance( ParameterHandleValueMap theParameters ) throws Exception {
 
-		logger.error("FINISH INSTANCE!.");
+		error("FINISH INSTANCE!.");
 		
 		/*
-		logger.debug("Node " + nodeSerial + " finished instance " + instanceSerial );
+		debug("Node " + nodeSerial + " finished instance " + instanceSerial );
 		
 		Instance instance = instanceBuffer.getIntanceFromOutputBuffer(instanceSerial);
 		if ( instance != null ) {
 			finishInstance( instance );
 		} else {
-			logger.error("instance " + instanceSerial + " is not in output buffer.");
+			error("instance " + instanceSerial + " is not in output buffer.");
 		}
 		*/
 
 	}
 	
 	private void finishInstance( Instance instance ) {
-		logger.debug("instance " + instance.getSerial() + " is finished by " + instance.getExecutedBy() +
+		debug("instance " + instance.getSerial() + " is finished by " + instance.getExecutedBy() +
 				". execution time: " + instance.getElapsedTime() );
 		try {
 			// Set as finished (database)
@@ -116,7 +108,7 @@ public class SagittariusFederate {
 			// Remove from output buffer if any
 			instanceBuffer.removeFromOutputBuffer( instance );
 		} catch ( Exception e ) {
-			logger.error( e.getMessage() );
+			error( e.getMessage() );
 			e.printStackTrace();
 		}
 	}
@@ -136,7 +128,7 @@ public class SagittariusFederate {
 	}	
 	
 	
-	// ==============================================================================
+	// ============================== END OLD SAGITARII STUFF ================================================
 
 	public static SagittariusFederate getInstance() throws Exception {
 		if ( instance == null ) {
@@ -146,17 +138,17 @@ public class SagittariusFederate {
 	}
 	
 	public void finishFederationExecution() throws Exception {
-		logger.debug( "Will try to finish Federation execution" );
+		debug( "Will try to finish Federation execution" );
 		RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 
 		rtiamb.resignFederationExecution( ResignAction.DELETE_OBJECTS );
 		try	{
 			rtiamb.destroyFederationExecution( "Zodiac" );
-			logger.debug( "Destroyed Federation" );
+			debug( "Destroyed Federation" );
 		} catch( FederationExecutionDoesNotExist dne ) {
-			logger.debug( "No need to destroy federation, it doesn't exist" );
+			debug( "No need to destroy federation, it doesn't exist" );
 		} catch( FederatesCurrentlyJoined fcj ){
-			logger.debug( "Didn't destroy federation, federates still joined" );
+			debug( "Didn't destroy federation, federates still joined" );
 		}		
 	}
 	
@@ -168,7 +160,7 @@ public class SagittariusFederate {
 	}
 	
 	private void startFederate() {
-		logger.debug("Starting Zodiac Sagittarius");
+		debug("Starting Zodiac Sagittarius Instance Controller");
 		try {
 
 			Map<String, String> newenv = new HashMap<String, String>();
@@ -184,66 +176,37 @@ public class SagittariusFederate {
 				};
 				rtiamb.createFederationExecution("Zodiac", modules );
 			} catch( FederationExecutionAlreadyExists exists ) {
-				logger.debug("Federation already exists. Bypassing...");
+				debug("Federation already exists. Bypassing...");
 			}
 			
-			join();
+			try {
+				join();
+			} catch ( Exception e ) {
+				error("Error when joing the Federation: " + e.getMessage() );
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
 	}
-	
-	private String fillInstanceID( Instance instance ) {
-		String content = instance.getContent();
-		try {
-			content = instance.getContent().replace("%ID_PIP%", String.valueOf( instance.getIdInstance() ) );
-		} catch ( Exception e ) {
-			logger.error("Error setting Instance ID to instance content tag.");
-		}
-		return content.replace("##TAG_ID_INSTANCE##", String.valueOf( instance.getIdInstance() ) );
-	}	
-	
-	private String encode( Instance instance ) {
-		instance.setStartDateTime( Calendar.getInstance().getTime() );
-		instance.setStatus( InstanceStatus.WAITING );
-		String content = fillInstanceID ( instance );
-		instance.setContent( content );
-		byte[] respCompressed = ZipUtil.compress( content );
-		String respHex = ZipUtil.toHexString( respCompressed );
-		logger.debug( " > instance "+ instance.getSerial() + " compressed and control tags replaced." );	
-		return respHex;
-	}
-	
-	public void sendInstancesToNode( ParameterHandleValueMap theParameters ) throws Exception {
-		dd
-		/*
-		if ( !nodeSerial.equals("") ) {
-			CoreObject core = coreClass.getCore( nodeSerial );
-			if ( core != null ) {
-				Instance instance = null;
-				
-				if ( taskType.equals("teapot")) {
-					instance = getNextInstance( core.getOwnerNode() );
-				}
-				
-				if ( taskType.equals("nunki")) {
-					instance = getNextJoinInstance( core.getOwnerNode() );
-				}
 
-				if ( instance != null ) {
-					String hexEncodedInstance = encode( instance );
-					runInstanceInteractionClass.send( hexEncodedInstance, nodeSerial );
-				} else {
-					// no instance
-				}
-				
-			}
-			
-		}
-		*/
+	
+	public ObjectInstanceHandle getSagittariusObjectHandle() {
+		return getSagittariusClass().getSagittariusObjectHandle();
 	}
 	
+	public void reflectAttributeUpdate( ObjectInstanceHandle theObject,  AttributeHandleValueMap theAttributes ) {
+		
+		try {
+			getCoreClass().reflectAttributeValues( theAttributes, theObject );
+			getScorpioClass().reflectAttributeValues( theAttributes, theObject );
+		} catch ( Exception e ) {
+			e.printStackTrace(); 
+		}		
+		
+	}
+	
+
 	public void startServer() throws Exception {
 		startFederate();
 		if ( sagittariusClass == null ) {
@@ -263,11 +226,12 @@ public class SagittariusFederate {
 			// Subscribe to Cores updates
 			coreClass = new CoreClass();
 			coreClass.subscribe();
+			coreClass.publishCurrentInstance();
 
-			logger.debug("done.");
+			debug("done.");
 			
 		} else {
-			logger.warn("server is already running an instance");
+			warn("server is already running an instance");
 		}
 	}
 	
@@ -286,7 +250,7 @@ public class SagittariusFederate {
 	private void join() throws Exception {
 		RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 
-		logger.debug("joing Federation Execution ...");
+		debug("joing Federation Execution ...");
 		URL[] joinModules = new URL[]{
 			(new File(rootPath +  "/foms/zodiac.xml")).toURI().toURL(),	
 		    (new File(rootPath +  "/foms/sagittarius.xml")).toURI().toURL(),
@@ -295,5 +259,34 @@ public class SagittariusFederate {
 		};
 		rtiamb.joinFederationExecution( "Sagittarius", "SagittariusType", "Zodiac", joinModules );           
 	}
+	
+	public void attributeOwnershipAcquisitionNotification( ObjectInstanceHandle theObject, AttributeHandleSet securedAttributes ) {
+		debug("I now own the Current Instance attibute. Sending new instance...");
+		getCoreClass().sendInstance( theObject );
+	}	
+	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
+
+	private void warn( String s ) {
+		Logger.getInstance().warn(this.getClass().getName(), s );
+	}	
+
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}
+
+	public void releaseAttributeOwnership(ObjectInstanceHandle theObject, AttributeHandleSet candidateAttributes) {
+		debug("Release Attribute Ownership Request");
+		try {
+			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
+			rtiamb.attributeOwnershipDivestitureIfWanted( theObject, candidateAttributes );
+			debug("Released.");
+		} catch ( Exception e ) {
+			error("Error: " + e.getMessage() );
+		}		
+	}	
+	
 	
 }

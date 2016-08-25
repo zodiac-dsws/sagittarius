@@ -26,7 +26,6 @@ import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectInstanceHandle;
-import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.FederatesCurrentlyJoined;
@@ -85,13 +84,8 @@ public class SagittariusFederate {
 		instanceBuffer.reloadAfterCrash( runningExperiments );
 	}	
 	
-	public synchronized void finishInstance( ParameterHandleValueMap theParameters ) throws Exception {
-
-		error("FINISH INSTANCE!.");
-		
+	public synchronized void finishInstance( String instanceSerial ) throws Exception {
 		/*
-		debug("Node " + nodeSerial + " finished instance " + instanceSerial );
-		
 		Instance instance = instanceBuffer.getIntanceFromOutputBuffer(instanceSerial);
 		if ( instance != null ) {
 			finishInstance( instance );
@@ -99,12 +93,10 @@ public class SagittariusFederate {
 			error("instance " + instanceSerial + " is not in output buffer.");
 		}
 		*/
-
 	}
 	
 	private void finishInstance( Instance instance ) {
-		debug("instance " + instance.getSerial() + " is finished by " + instance.getExecutedBy() +
-				". execution time: " + instance.getElapsedTime() );
+		debug("instance " + instance.getSerial() + " is finished by " + instance.getExecutedBy() + ". execution time: " + instance.getElapsedTime() );
 		try {
 			// Set as finished (database)
 			InstanceService instanceService = new InstanceService();

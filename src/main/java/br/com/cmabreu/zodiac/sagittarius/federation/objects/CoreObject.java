@@ -1,6 +1,5 @@
 package br.com.cmabreu.zodiac.sagittarius.federation.objects;
 
-import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class CoreObject {
@@ -111,16 +110,5 @@ public class CoreObject {
 		this.activitySerial = activitySerial;
 	}
 	
-	private void debug( String s ) {
-		Logger.getInstance().debug(this.getClass().getName(), s );
-	}	
-
-	private void warn( String s ) {
-		Logger.getInstance().warn(this.getClass().getName(), s );
-	}	
-
-	private void error( String s ) {
-		Logger.getInstance().error(this.getClass().getName(), s );
-	}		
 	
 }

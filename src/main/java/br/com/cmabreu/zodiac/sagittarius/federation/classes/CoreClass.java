@@ -3,6 +3,8 @@ package br.com.cmabreu.zodiac.sagittarius.federation.classes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsRequest;
+
 import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
@@ -37,10 +39,17 @@ public class CoreClass {
 	private EncoderDecoder encodec;
 	
 	public void requestCurrentInstanceOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
-		RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
-		AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
-		ahs.add( currentInstanceHandle );
-		rtiamb.attributeOwnershipAcquisition( theObject, ahs, null );
+		try {
+			
+			getNode()
+			
+			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
+			AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
+			ahs.add( currentInstanceHandle );
+			rtiamb.attributeOwnershipAcquisition( theObject, ahs, null );
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
 	}		
 	
 	public List<CoreObject> getCores() {
@@ -123,13 +132,14 @@ public class CoreClass {
 						
 						try {
 							String content = encodec.toString( theAttributes.get(attributeHandle));
+							//debug("Update Core Current Instance: Was: " + core.getCurrentInstance() + " Now: " + content);
 							core.setCurrentInstance( content );
 							
 							if ( content.equals("*") ) {
-								System.out.println( "Requesting Current Instance ownership" );
+								debug( "Requesting Current Instance ownership" );
 								requestCurrentInstanceOwnerShip( theObject );
 							} else {
-								System.out.println("Current Instance has changed to " + content );
+								debug("Current Instance has changed to " + content );
 							}
 							
 							/*
@@ -149,12 +159,7 @@ public class CoreClass {
 						
 					}
 				}
-				/*
-				System.out.println(">>>>>>>>>>>>>>>>>>> " + core.getActivitySerial() + " " + core.getExecutor() + 
-						" " + core.getExecutorType() + " " + core.getExperimentSerial() + " " + 
-						core.getFragmentSerial() + " " + core.getInstanceSerial() + " " + core.getOwnerNode() + " " +
-						core.getSerial() );
-				*/
+				
 				return core;
 			}
 		}

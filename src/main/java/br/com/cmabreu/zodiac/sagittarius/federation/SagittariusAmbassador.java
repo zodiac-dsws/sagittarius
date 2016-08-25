@@ -5,7 +5,6 @@ import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederat
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.LogicalTime;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -23,16 +22,6 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	                                    byte[] tag, OrderType sentOrder, TransportationTypeHandle transport,
 	                                    SupplementalReflectInfo reflectInfo ) throws FederateInternalError {
 		
-		reflectAttributeValues( theObject, theAttributes, tag, sentOrder, transport, null, sentOrder, reflectInfo );
-			
-	}
-
-	
-	@Override
-	public void reflectAttributeValues( ObjectInstanceHandle theObject,  AttributeHandleValueMap theAttributes,
-	                                    byte[] tag,  OrderType sentOrdering, TransportationTypeHandle theTransport,
-	                                    LogicalTime time,  OrderType receivedOrdering, SupplementalReflectInfo reflectInfo ) throws FederateInternalError {
-
 		try {
 			SagittariusFederate.getInstance().reflectAttributeUpdate( theObject, theAttributes );
 		} catch ( Exception e ) {
@@ -40,6 +29,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 		}
 		
 	}
+
 	
 	@Override
     public void requestAttributeOwnershipRelease( ObjectInstanceHandle theObject, AttributeHandleSet candidateAttributes, byte[] userSuppliedTag) throws FederateInternalError {
@@ -125,10 +115,6 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	
 	private void debug( String s ) {
 		Logger.getInstance().debug(this.getClass().getName(), s );
-	}	
-
-	private void warn( String s ) {
-		Logger.getInstance().warn(this.getClass().getName(), s );
 	}	
 
 	private void error( String s ) {

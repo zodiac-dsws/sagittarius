@@ -65,15 +65,16 @@ public class Main {
 				loggerDebug("no running experiments found");	
 			}			
 
-			loggerDebug("Buffer cabacity " + maxInputBufferCapacity );
+	        SagittariusFederate.getInstance().loadBuffers();	        
+	        loggerDebug("Buffer cabacity " + maxInputBufferCapacity );
 	        SagittariusFederate.getInstance().setMaxInputBufferCapacity( maxInputBufferCapacity );
 	        SagittariusFederate.getInstance().startServer();
-	        
-	        scheduler = Executors.newSingleThreadScheduledExecutor();
 
+			scheduler = Executors.newSingleThreadScheduledExecutor();
 	        MainHeartBeat as = new MainHeartBeat();
-	        scheduler.scheduleAtFixedRate(as, 20, interval , TimeUnit.SECONDS);
-			
+	        scheduler.scheduleAtFixedRate(as, interval, interval , TimeUnit.SECONDS);
+
+
 		} catch (Exception e) { 
 			System.out.println( e.getMessage() );
 			loggerError( e.getMessage() );

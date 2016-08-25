@@ -3,6 +3,7 @@ package br.com.cmabreu.zodiac.sagittarius.federation.federates;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +17,12 @@ import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
+import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
 import br.com.cmabreu.zodiac.sagittarius.types.ExperimentStatus;
+import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -40,8 +44,8 @@ public class SagittariusFederate {
 	private InstanceBuffer instanceBuffer;
 	private List<Experiment> runningExperiments;
 	
-	public void loadBuffers() throws Exception {
-		instanceBuffer.loadBuffers();
+	public int loadBuffers() throws Exception {
+		return instanceBuffer.loadBuffers();
 	}
 	
 	public void setMaxInputBufferCapacity(int maxInputBufferCapacity) {
@@ -262,7 +266,7 @@ public class SagittariusFederate {
 	
 	public void attributeOwnershipAcquisitionNotification( ObjectInstanceHandle theObject, AttributeHandleSet securedAttributes ) {
 		debug("I now own the Current Instance attibute. Sending new instance...");
-		getCoreClass().sendInstance( theObject );
+		sendInstance( theObject );
 	}	
 	
 	private void debug( String s ) {
@@ -286,6 +290,65 @@ public class SagittariusFederate {
 		} catch ( Exception e ) {
 			error("Error: " + e.getMessage() );
 		}		
+	}
+	
+	private String fillInstanceID( Instance instance ) {
+		String content = instance.getContent();
+		try {
+			content = instance.getContent().replace("%ID_PIP%", String.valueOf( instance.getIdInstance() ) );
+		} catch ( Exception e ) {
+			error("Error setting Instance ID to instance content tag.");
+		}
+		return content.replace("##TAG_ID_INSTANCE##", String.valueOf( instance.getIdInstance() ) );
+	}	
+	
+	private String encode( Instance instance ) {
+		instance.setStartDateTime( Calendar.getInstance().getTime() );
+		instance.setStatus( InstanceStatus.WAITING );
+		String content = fillInstanceID ( instance );
+		instance.setContent( content );
+		byte[] respCompressed = ZipUtil.compress( content );
+		String respHex = ZipUtil.toHexString( respCompressed );
+		debug( " > instance "+ instance.getSerial() + " compressed and control tags replaced." );	
+		return respHex;
+	}
+	
+	
+	private synchronized void sendInstance( ObjectInstanceHandle theObject ) {
+		try {
+			for ( CoreObject core : coreClass.getCores()  ) {
+				if ( core.isMe( theObject ) ) {
+					Instance instance = getNextInstance( core.getOwnerNode() );
+					if ( instance != null ) {
+						debug("sending Instance " + instance.getSerial() + " to Core " + core.getSerial() + "@" + core.getOwnerNode() );
+						core.setCurrentInstance( encode( instance ) );
+						try {
+							coreClass.updateAttributeValuesObject( core );
+						} catch ( Exception e ) {
+							warn("Returning Instance " + instance.getSerial() + " to buffer because of " + e.getMessage() );
+							instanceBuffer.returnToBuffer(instance);
+						}
+					} 
+					break;
+				}
+			}
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+	}	
+
+	public void checkCores() {
+		try {
+			for ( CoreObject core : coreClass.getCores()  ) {
+				System.out.println("Core : " + core.getSerial() + " " + core.getCurrentInstance() + " " + core.isWorking() );
+				if (  core.getCurrentInstance().equals("*")  && !core.isWorking() ) {
+					sendInstance( core.getHandle() );
+				}
+			}
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+		
 	}	
 	
 	

@@ -47,9 +47,9 @@ public class InstanceBuffer {
 		debug("done.");
 	}
 	
-	public synchronized void loadBuffers() throws Exception {
+	public synchronized int loadBuffers() throws Exception {
 		int runningExperimentCount = getRunningExperiments().size(); 
-		if ( runningExperimentCount == 0 ) return;
+		if ( runningExperimentCount == 0 ) return 0;
 		int sliceSize;
 
 		if ( getInstanceInputBufferSize() < ( bufferSize / 3 ) ) {
@@ -107,6 +107,7 @@ public class InstanceBuffer {
 			debug("SELECT buffer size: " + instanceJoinInputBuffer.size() );
 		}
 		
+		return ( instanceInputBuffer.size() + instanceJoinInputBuffer.size() );
 	}
 	
 	
@@ -119,6 +120,7 @@ public class InstanceBuffer {
 	}
 	
 	private synchronized Instance getNextInstance( String macAddress) {
+		System.out.println("Blihhhh...");
 		Instance instance = getNextInstance( getRunningExperiments(), macAddress );
 		if ( instance != null ) {
 			debug("serving instance " + instance.getSerial() + " to " + macAddress );
@@ -129,7 +131,6 @@ public class InstanceBuffer {
 	}
 	
 	public synchronized Instance getNextInstance( List<Experiment> runningExperiments, String macAddress ) {
-		
 		this.runningExperiments = runningExperiments;
 		Instance next = instanceInputBuffer.poll();
 		if ( next != null ) {
@@ -143,7 +144,7 @@ public class InstanceBuffer {
 				}
 			}
 		} else {
-			//debug("empty output buffer.");
+			debug("empty output buffer.");
 		}
 		return next;
 	}

@@ -6,7 +6,6 @@ import java.util.List;
 import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
-import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -55,30 +54,12 @@ public class CoreClass {
 		return null;
 	}
 	
-	public void sendInstance( ObjectInstanceHandle theObject ) {
-		
-		try {
-			for ( CoreObject core : getCores()  ) {
-				if ( core.isMe( theObject ) ) {
-					debug("sending instance to " + core.getSerial() );					 
-					if ( core.getNextInstance() ) {
-						updateAttributeValuesObject( core );
-					} else {
-						debug("nothing to send to " + core.getSerial() );
-					}
-				}
-			}
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
-	}
-	
 
-	private void updateAttributeValuesObject( CoreObject object ) throws RTIexception {
-		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( object.getCurrentInstance() );
+	public void updateAttributeValuesObject( CoreObject core ) throws RTIexception {
+		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( core.getCurrentInstance() );
 		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
 		attributes.put( currentInstanceHandle, currentInstanceHandleValue.toByteArray() );
-		rtiamb.updateAttributeValues( object.getHandle(), attributes, "Core Attributes".getBytes() );
+		rtiamb.updateAttributeValues( core.getHandle(), attributes, "Core Attributes".getBytes() );
 	}	
 	
 	public void remove( ObjectInstanceHandle objHandle ) {

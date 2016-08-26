@@ -12,7 +12,16 @@ public class ScorpioObject {
 	private String ipAddress;
 	private String macAddress;
 	private ObjectInstanceHandle instance;
+	private int totalInstances = 0;
 
+	public void setTotalInstances(int totalInstances) {
+		this.totalInstances = totalInstances;
+	}
+	
+	public int getTotalInstances() {
+		return totalInstances;
+	}
+	
 	public boolean isMe( ObjectInstanceHandle objHandle ) {
 		if ( instance.equals( objHandle ) ) {
 			return true;

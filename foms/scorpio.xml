@@ -125,6 +125,20 @@
                     <order>Receive</order>
                     <semantics>Free memory.</semantics>
                 </attribute>
+				
+                <attribute>
+                    <name>TotalInstances</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Conditional</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>DivestAcquire</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Total of Instances executed</semantics>
+                </attribute>	
+				
             </objectClass>			
         </objectClass>
     </objects>

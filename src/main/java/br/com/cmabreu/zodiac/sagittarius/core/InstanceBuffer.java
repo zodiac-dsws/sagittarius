@@ -338,5 +338,9 @@ public class InstanceBuffer {
 
 	private void error( String s ) {
 		Logger.getInstance().error(this.getClass().getName(), s );
+	}
+
+	public int getInstanceOutputBufferSize() {
+		return instanceOutputBuffer.size();
 	}	
 }

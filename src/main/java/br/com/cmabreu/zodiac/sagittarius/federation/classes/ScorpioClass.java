@@ -27,6 +27,7 @@ public class ScorpioClass {
 	private AttributeHandle totalMemoryHandle;
 	private AttributeHandle freeMemoryHandle;
 	private AttributeHandle ipAddressHandle;
+	private AttributeHandle totalInstancesHandle;
 	
 	private AttributeHandleSet attributes;
 	
@@ -86,6 +87,7 @@ public class ScorpioClass {
 			this.totalMemoryHandle = rtiamb.getAttributeHandle( classHandle, "TotalMemory" );
 			this.freeMemoryHandle = rtiamb.getAttributeHandle( classHandle, "FreeMemory" );
 			this.ipAddressHandle = rtiamb.getAttributeHandle( classHandle, "IPAddress" );
+			this.totalInstancesHandle = rtiamb.getAttributeHandle( classHandle, "TotalInstances" );
 			
 			this.attributes = rtiamb.getAttributeHandleSetFactory().create();
 			attributes.add( macAddressHandle );
@@ -96,6 +98,7 @@ public class ScorpioClass {
 			attributes.add( totalMemoryHandle );
 			attributes.add( freeMemoryHandle );
 			attributes.add( ipAddressHandle );
+			attributes.add( totalInstancesHandle );
 			
 			encodec = new EncoderDecoder();
 		} catch ( Exception e ) {
@@ -146,6 +149,9 @@ public class ScorpioClass {
 					if( attributeHandle.equals( ipAddressHandle) ) {
 						node.setIpAddress( encodec.toString( theAttributes.get(attributeHandle) ) );
 					}  
+					if( attributeHandle.equals( totalInstancesHandle) ) {
+						node.setTotalInstances( encodec.toInteger32( theAttributes.get(attributeHandle) ) );
+					}  
 				}
 				return node;
 			}
@@ -158,11 +164,4 @@ public class ScorpioClass {
 		Logger.getInstance().debug(this.getClass().getName(), s );
 	}	
 
-	private void warn( String s ) {
-		Logger.getInstance().warn(this.getClass().getName(), s );
-	}	
-
-	private void error( String s ) {
-		Logger.getInstance().error(this.getClass().getName(), s );
-	}		
 }

@@ -3,6 +3,7 @@ package br.com.cmabreu.zodiac.sagittarius.federation.classes;
 import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
+import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.SagittariusObject;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -10,12 +11,19 @@ import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
+import hla.rti1516e.encoding.HLAinteger32BE;
 import hla.rti1516e.encoding.HLAunicodeString;
 import hla.rti1516e.exceptions.RTIexception;
 
 public class SagittariusClass {
 	private static ObjectClassHandle classHandle;
 	private AttributeHandle macAddressAttributeHandle;
+	
+	private AttributeHandle instanceInputBufferHandle;
+	private AttributeHandle instanceJoinInputBufferHandle;
+	private AttributeHandle instanceOutputBufferHandle;
+	private AttributeHandle runningExperimentsHandle;
+	
 	private EncoderDecoder encodec;
 	private AttributeHandleSet attributes;
 	private RTIambassador rtiamb;
@@ -27,35 +35,62 @@ public class SagittariusClass {
 	}
 	
 	public void createNew() throws RTIexception {
-		error("new HLA Sagittarius Object instance created");
+		debug("new HLA Sagittarius Object instance created");
 		ObjectInstanceHandle handle = rtiamb.registerObjectInstance( classHandle, "Sagittarius" );
 		sagittarius = new SagittariusObject( handle );
 	}	
 	
 	public SagittariusClass() {
 		try {
-			error("new server");
+			debug("new server");
 			rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
-	
 			classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.Sagittarius" );
+			
 			attributes = rtiamb.getAttributeHandleSetFactory().create();
+			
 			encodec = new EncoderDecoder();
 			
-			error("registering attributes");
 			macAddressAttributeHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
+			instanceInputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceInputBuffer" );
+			instanceJoinInputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceJoinInputBuffer" );
+			instanceOutputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceOutputBuffer" );
+			runningExperimentsHandle = rtiamb.getAttributeHandle( classHandle, "RunningExperiments" );
+			
 			attributes.add( macAddressAttributeHandle );
+			attributes.add( instanceInputBufferHandle );
+			attributes.add( instanceJoinInputBufferHandle );
+			attributes.add( instanceOutputBufferHandle );
+			attributes.add( runningExperimentsHandle );
+			
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void updateAttributeValues() throws RTIexception {
-		error("updating attributes");
+	public void updateAttributeValues() throws Exception {
+		debug("updating attributes");
 		String macAddress = sagittarius.getMacAddress();
+		int instanceInputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceInputBufferSize();
+		int instanceJoinInputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceJoinInputBufferSize();
+		int instanceOutputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceOutputBufferSize();
+		int runningExperiments = SagittariusFederate.getInstance().getInstanceBuffer().getRunningExperiments().size();
+		
 		ObjectInstanceHandle objectInstanceHandle = sagittarius.getHandle();
-		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
+		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(5);
+		
 		HLAunicodeString macAddressValue = encodec.createHLAunicodeString( macAddress );
+		HLAinteger32BE instanceInputBufferValue = encodec.createHLAinteger32BE( instanceInputBuffer );
+		HLAinteger32BE instanceJoinInputBufferValue = encodec.createHLAinteger32BE( instanceJoinInputBuffer );
+		HLAinteger32BE instanceOutputBufferValue = encodec.createHLAinteger32BE( instanceOutputBuffer );
+		HLAinteger32BE runningExperimentsValue = encodec.createHLAinteger32BE( runningExperiments );
+		
 		attributes.put( macAddressAttributeHandle, macAddressValue.toByteArray() );
+		attributes.put( instanceInputBufferHandle, instanceInputBufferValue.toByteArray() );
+		attributes.put( instanceJoinInputBufferHandle, instanceJoinInputBufferValue.toByteArray() );
+		attributes.put( instanceOutputBufferHandle, instanceOutputBufferValue.toByteArray() );
+		attributes.put( runningExperimentsHandle, runningExperimentsValue.toByteArray() );
+		
+		
 		rtiamb.updateAttributeValues( objectInstanceHandle, attributes, "Sagittarius Attributes".getBytes() );
 	}
 	
@@ -68,24 +103,29 @@ public class SagittariusClass {
 	}
 	
 	public void publish() throws RTIexception {
-		error("publish");
+		debug("publish");
 		rtiamb.publishObjectClassAttributes( classHandle, attributes );
 	}
 	
 	public void subscribe() throws RTIexception {
-
+		debug("subscribe");
+		rtiamb.subscribeObjectClassAttributes( classHandle, attributes );
 	}	
 	
 	private void debug( String s ) {
 		Logger.getInstance().debug(this.getClass().getName(), s );
-	}	
-
-	private void warn( String s ) {
-		Logger.getInstance().warn(this.getClass().getName(), s );
-	}	
+	}
 
 	private void error( String s ) {
 		Logger.getInstance().error(this.getClass().getName(), s );
+	}
+
+	public void provideAttributeValueUpdate(ObjectInstanceHandle theObject, AttributeHandleSet theAttributes) {
+		try {
+			updateAttributeValues();
+		} catch ( Exception e ) {
+			error("Error sending attributes to RTI under request.");
+		}
 	}		
 
 }

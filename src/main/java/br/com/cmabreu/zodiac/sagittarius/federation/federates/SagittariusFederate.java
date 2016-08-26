@@ -84,9 +84,11 @@ public class SagittariusFederate {
 		instanceBuffer.reloadAfterCrash( runningExperiments );
 	}	
 	
-	public synchronized void finishInstance( String instanceSerial ) throws Exception {
+	public synchronized void finishInstance( String instanceSerial, CoreObject core ) throws Exception {
 		Instance instance = instanceBuffer.getIntanceFromOutputBuffer( instanceSerial );
 		if ( instance != null ) {
+			instance.setFinishDateTime( Calendar.getInstance().getTime() );
+			instance.setExecutedBy( core.getOwnerNode() );
 			finishInstance( instance );
 		} else {
 			error("Instance " + instanceSerial + " is not in output buffer.");
@@ -94,7 +96,7 @@ public class SagittariusFederate {
 	}
 	
 	private void finishInstance( Instance instance ) {
-		debug("instance " + instance.getSerial() + " is finished by " + instance.getExecutedBy() + ". execution time: " + instance.getElapsedTime() );
+		debug("instance " + instance.getSerial() + " was finished by " + instance.getExecutedBy() + ". execution time: " + instance.getElapsedTime() );
 		try {
 			// Set as finished (database)
 			InstanceService instanceService = new InstanceService();
@@ -146,6 +148,9 @@ public class SagittariusFederate {
 		}		
 	}
 	
+	public InstanceBuffer getInstanceBuffer() {
+		return instanceBuffer;
+	}
 	
 	private SagittariusFederate( ) throws Exception {
 		instanceBuffer = new InstanceBuffer();

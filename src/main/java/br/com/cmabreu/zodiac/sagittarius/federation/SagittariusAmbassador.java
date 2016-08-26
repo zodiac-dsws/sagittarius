@@ -16,7 +16,18 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class SagittariusAmbassador extends NullFederateAmbassador {
 	
+	@Override
+	public void provideAttributeValueUpdate(ObjectInstanceHandle theObject,	AttributeHandleSet theAttributes, byte[] userSuppliedTag)
+			throws FederateInternalError {
 
+		try {
+			SagittariusFederate.getInstance().getSagittariusClass().provideAttributeValueUpdate(theObject, theAttributes);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}	
+	
 	@Override
 	public void reflectAttributeValues( ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes,
 	                                    byte[] tag, OrderType sentOrder, TransportationTypeHandle transport,

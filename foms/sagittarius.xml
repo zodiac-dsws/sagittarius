@@ -41,6 +41,59 @@
                     <order>Receive</order>
                     <semantics>Computer's MAC Address</semantics>
                 </attribute>
+				
+                <attribute>
+                    <name>InstanceInputBuffer</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Static</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>NoTransfer</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Instance Input Buffer size</semantics>
+                </attribute>
+				
+                <attribute>
+                    <name>InstanceJoinInputBuffer</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Static</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>NoTransfer</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Instance Join Input Buffer size</semantics>
+                </attribute>
+				
+                <attribute>
+                    <name>InstanceOutputBuffer</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Static</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>NoTransfer</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Instance Output Buffer size</semantics>
+                </attribute>
+				
+                <attribute>
+                    <name>RunningExperiments</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Static</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>NoTransfer</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Running Experiments</semantics>
+                </attribute>
+				
             </objectClass>
         </objectClass>
     </objects>

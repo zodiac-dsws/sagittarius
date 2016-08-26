@@ -45,7 +45,7 @@ public class CoreClass {
 			
 			debug("Finishing Instance " + instanceSerial + " with result " + core.getResult() );
 			// if result == RESULT_OK then finish instance else refund instance to buffer
-			SagittariusFederate.getInstance().finishInstance( instanceSerial );
+			SagittariusFederate.getInstance().finishInstance( instanceSerial, core );
 			core.setInstanceSerial("*");
 			// ==========================================================================
 
@@ -153,10 +153,11 @@ public class CoreClass {
 				
 				try {
 					if ( core.getCurrentInstance().equals("*") ) {
-						debug( "Requesting Current Instance ownership" );
+						debug( "Core " + core.getSerial() + "@" + core.getOwnerNode() + ": Instance " + core.getInstanceSerial() + 
+								" done. Requesting attribute ownership..." );
 						requestCurrentInstanceOwnerShip( theObject );
 					} else {
-						debug("Current Instance has changed to " + core.getCurrentInstance() );
+						// debug("Current Instance was changed to " + core.getCurrentInstance() );
 					}
 				} catch ( Exception e ) {
 					e.printStackTrace();

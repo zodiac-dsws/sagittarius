@@ -151,9 +151,6 @@ public class CoreClass {
 					}
 				}
 				
-				
-				System.out.println(" >>>>>>>>>>>>>> " + core.getInstanceSerial() );
-				
 				try {
 					if ( core.getCurrentInstance().equals("*") ) {
 						debug( "Requesting Current Instance ownership" );

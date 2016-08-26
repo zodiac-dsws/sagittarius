@@ -73,10 +73,9 @@ public class InstanceBuffer {
 			try {
 				if ( listContainer.size() > 0 ) {
 					debug("container have " + listContainer.size() + " instance list. Merging...");
-					List<Instance> instances = listContainer.merge();
-					instanceInputBuffer.addAll( instances );
+					instanceInputBuffer.addAll( listContainer.merge() );
 				} else {
-					error("container is empty. Something VERY wrong happen. ");
+					//
 				}
 				debug("common buffer size: " + instanceInputBuffer.size() );
 			} catch ( Exception e ) {
@@ -102,6 +101,7 @@ public class InstanceBuffer {
 				}
 			}
 			if ( listContainerS.size() > 0 ) {
+				debug("SQL container have " + listContainerS.size() + " instance list. Merging...");
 				instanceJoinInputBuffer.addAll( listContainerS.merge() );
 			}
 			debug("SELECT buffer size: " + instanceJoinInputBuffer.size() );

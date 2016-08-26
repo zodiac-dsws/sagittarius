@@ -161,6 +161,18 @@
                     <semantics>Core Current Working Instance. Empty if Idle</semantics>
                 </attribute>
 
+                <attribute>
+                    <name>LastExecutionResult</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Conditional</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>DivestAcquire</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Last Execution Result</semantics>
+                </attribute>				
 				
             </objectClass>
 			

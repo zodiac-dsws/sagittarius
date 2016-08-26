@@ -3,11 +3,10 @@ package br.com.cmabreu.zodiac.sagittarius.federation.classes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsRequest;
-
 import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.EncoderDecoder;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
+import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -32,7 +31,7 @@ public class CoreClass {
 	private AttributeHandle executorHandle;
 	private AttributeHandle executorTypeHandle;
 	private AttributeHandle currentInstanceHandle;
-	
+	private AttributeHandle executionResultHandle;
 	
 	private AttributeHandleSet attributes;
 	private List<CoreObject> cores;
@@ -41,8 +40,15 @@ public class CoreClass {
 	public void requestCurrentInstanceOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
 		try {
 			
-			getNode()
+			CoreObject core = getCoreByHandle( theObject );
+			String instanceSerial = core.getInstanceSerial();
 			
+			debug("Finishing Instance " + instanceSerial + " with result " + core.getResult() );
+			// if result == RESULT_OK then finish instance else refund instance to buffer
+			SagittariusFederate.getInstance().finishInstance( instanceSerial );
+			core.setInstanceSerial("*");
+			// ==========================================================================
+
 			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
 			ahs.add( currentInstanceHandle );
@@ -52,13 +58,20 @@ public class CoreClass {
 		}
 	}		
 	
+	private CoreObject getCoreByHandle(ObjectInstanceHandle theObject) {
+		for ( CoreObject core : getCores() ) {
+			if ( core.getHandle().equals( theObject ) ) return core;
+		}
+		return null;
+	}
+
 	public List<CoreObject> getCores() {
 		return new ArrayList<CoreObject>(cores);
 	}
 
 	public CoreObject getCore( String coreSerial ) {
 		for ( CoreObject core : getCores()  ) {
-			if ( core.getSerial().contentEquals( coreSerial ) ) return core; 
+			if ( core.getSerial().equals( coreSerial ) ) return core; 
 		}
 		return null;
 	}
@@ -122,6 +135,11 @@ public class CoreClass {
 					else if( attributeHandle.equals( ownerNodeHandle ) ) {
 						core.setOwnerNode( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
+
+					else if( attributeHandle.equals( executionResultHandle ) ) {
+						core.setResult( encodec.toInteger32( theAttributes.get(attributeHandle)) );
+					}
+					
 					else if( attributeHandle.equals( executorHandle ) ) {
 						core.setExecutor( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
@@ -129,36 +147,24 @@ public class CoreClass {
 						core.setExecutorType( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
 					else if( attributeHandle.equals( currentInstanceHandle ) ) {
-						
-						try {
-							String content = encodec.toString( theAttributes.get(attributeHandle));
-							//debug("Update Core Current Instance: Was: " + core.getCurrentInstance() + " Now: " + content);
-							core.setCurrentInstance( content );
-							
-							if ( content.equals("*") ) {
-								debug( "Requesting Current Instance ownership" );
-								requestCurrentInstanceOwnerShip( theObject );
-							} else {
-								debug("Current Instance has changed to " + content );
-							}
-							
-							/*
-							ObjectInstanceHandle sagittariusObject = SagittariusFederate.getInstance().getSagittariusObjectHandle();
-							if ( rtiamb.isAttributeOwnedByFederate( sagittariusObject, attributeHandle) ) {
-								System.out.println("Current Instance has changed its value! This attribute is owned by us.");
-								// We've changed this value. This attribute is owned by us. 
-							} else {
-								System.out.println("Current Instance has changed its value! Requesting attribute ownership...");
-								requestCurrentInstanceOwnerShip( theObject );
-							}
-							*/
-							
-						} catch ( Exception e ) {
-							e.printStackTrace();
-						}
-						
+						core.setCurrentInstance( encodec.toString( theAttributes.get(attributeHandle)) );
 					}
 				}
+				
+				
+				System.out.println(" >>>>>>>>>>>>>> " + core.getInstanceSerial() );
+				
+				try {
+					if ( core.getCurrentInstance().equals("*") ) {
+						debug( "Requesting Current Instance ownership" );
+						requestCurrentInstanceOwnerShip( theObject );
+					} else {
+						debug("Current Instance has changed to " + core.getCurrentInstance() );
+					}
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
+				
 				
 				return core;
 			}
@@ -199,7 +205,9 @@ public class CoreClass {
 		this.activitySerialHandle = rtiamb.getAttributeHandle( classHandle, "ActivitySerial" );	
 		this.executorHandle = rtiamb.getAttributeHandle( classHandle, "Executor" );
 		this.executorTypeHandle = rtiamb.getAttributeHandle( classHandle, "ExecutorType" );
-		this.currentInstanceHandle = rtiamb.getAttributeHandle( classHandle, "CurrentInstance" );		
+		this.currentInstanceHandle = rtiamb.getAttributeHandle( classHandle, "CurrentInstance" );	
+		this.executionResultHandle = rtiamb.getAttributeHandle( classHandle, "LastExecutionResult" );
+
 		
 		this.attributes = rtiamb.getAttributeHandleSetFactory().create();
 		
@@ -213,6 +221,7 @@ public class CoreClass {
 		attributes.add( executorHandle );
 		attributes.add( executorTypeHandle );
 		attributes.add( currentInstanceHandle );
+		attributes.add( executionResultHandle );
 		
 		cores = new ArrayList<CoreObject>();
 		encodec = new EncoderDecoder();

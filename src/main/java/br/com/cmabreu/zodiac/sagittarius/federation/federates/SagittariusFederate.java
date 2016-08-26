@@ -85,14 +85,12 @@ public class SagittariusFederate {
 	}	
 	
 	public synchronized void finishInstance( String instanceSerial ) throws Exception {
-		/*
-		Instance instance = instanceBuffer.getIntanceFromOutputBuffer(instanceSerial);
+		Instance instance = instanceBuffer.getIntanceFromOutputBuffer( instanceSerial );
 		if ( instance != null ) {
 			finishInstance( instance );
 		} else {
-			error("instance " + instanceSerial + " is not in output buffer.");
+			error("Instance " + instanceSerial + " is not in output buffer.");
 		}
-		*/
 	}
 	
 	private void finishInstance( Instance instance ) {

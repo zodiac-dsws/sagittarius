@@ -14,6 +14,15 @@ public class CoreObject {
 	private String executorType = "*";
 	private String ownerNode = "";
 	private String currentInstance = "*";
+	private int result;
+	
+	public int getResult() {
+		return result;
+	}
+	
+	public void setResult(int result) {
+		this.result = result;
+	}
 	
 	// =====================================================================================
 	// COMMON POJO

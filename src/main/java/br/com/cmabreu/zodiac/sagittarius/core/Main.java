@@ -36,7 +36,7 @@ public class Main {
     		int interval = 5;
     		int maxInputBufferCapacity = 500;
     		
-    		Logger.getInstance().enable();
+    		Logger.getInstance().disable();
        
 			Configurator config = Configurator.getInstance("config.xml");
 			config.loadMainConfig();

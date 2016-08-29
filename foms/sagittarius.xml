@@ -56,19 +56,6 @@
                 </attribute>
 				
                 <attribute>
-                    <name>InstanceJoinInputBuffer</name>
-                    <dataType>HLAinteger32BE</dataType>
-                    <updateType>Static</updateType>
-                    <updateCondition>NA</updateCondition>
-                    <ownership>NoTransfer</ownership>
-                    <sharing>PublishSubscribe</sharing>
-                    <dimensions/>
-                    <transportation>HLAreliable</transportation>
-                    <order>Receive</order>
-                    <semantics>Instance Join Input Buffer size</semantics>
-                </attribute>
-				
-                <attribute>
                     <name>InstanceOutputBuffer</name>
                     <dataType>HLAinteger32BE</dataType>
                     <updateType>Static</updateType>
@@ -94,7 +81,21 @@
                     <semantics>Running Experiments</semantics>
                 </attribute>
 				
-            </objectClass>
+                <attribute>
+                    <name>BufferCurrentLoad</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <updateType>Static</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>NoTransfer</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Current Instance buffer allocation percent</semantics>
+                </attribute>
+
+
+			</objectClass>
         </objectClass>
     </objects>
 	

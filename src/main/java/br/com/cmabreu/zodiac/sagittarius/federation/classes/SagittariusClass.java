@@ -20,9 +20,9 @@ public class SagittariusClass {
 	private AttributeHandle macAddressAttributeHandle;
 	
 	private AttributeHandle instanceInputBufferHandle;
-	private AttributeHandle instanceJoinInputBufferHandle;
 	private AttributeHandle instanceOutputBufferHandle;
 	private AttributeHandle runningExperimentsHandle;
+	private AttributeHandle bufferCurrentLoadHandle;
 	
 	private EncoderDecoder encodec;
 	private AttributeHandleSet attributes;
@@ -52,15 +52,15 @@ public class SagittariusClass {
 			
 			macAddressAttributeHandle = rtiamb.getAttributeHandle( classHandle, "MACAddress" );
 			instanceInputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceInputBuffer" );
-			instanceJoinInputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceJoinInputBuffer" );
 			instanceOutputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceOutputBuffer" );
 			runningExperimentsHandle = rtiamb.getAttributeHandle( classHandle, "RunningExperiments" );
+			bufferCurrentLoadHandle = rtiamb.getAttributeHandle( classHandle, "bufferCurrentLoad" );
 			
 			attributes.add( macAddressAttributeHandle );
 			attributes.add( instanceInputBufferHandle );
-			attributes.add( instanceJoinInputBufferHandle );
 			attributes.add( instanceOutputBufferHandle );
 			attributes.add( runningExperimentsHandle );
+			attributes.add( bufferCurrentLoadHandle );
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -71,25 +71,24 @@ public class SagittariusClass {
 		debug("updating attributes");
 		String macAddress = sagittarius.getMacAddress();
 		int instanceInputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceInputBufferSize();
-		int instanceJoinInputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceJoinInputBufferSize();
+		int bufferCurrentLoad = SagittariusFederate.getInstance().getInstanceBuffer().getBufferCurrentLoad();
 		int instanceOutputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceOutputBufferSize();
-		int runningExperiments = SagittariusFederate.getInstance().getInstanceBuffer().getRunningExperiments().size();
+		int runningExperiments = SagittariusFederate.getInstance().getRunningExperiments().size();
 		
 		ObjectInstanceHandle objectInstanceHandle = sagittarius.getHandle();
 		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(5);
 		
 		HLAunicodeString macAddressValue = encodec.createHLAunicodeString( macAddress );
 		HLAinteger32BE instanceInputBufferValue = encodec.createHLAinteger32BE( instanceInputBuffer );
-		HLAinteger32BE instanceJoinInputBufferValue = encodec.createHLAinteger32BE( instanceJoinInputBuffer );
 		HLAinteger32BE instanceOutputBufferValue = encodec.createHLAinteger32BE( instanceOutputBuffer );
 		HLAinteger32BE runningExperimentsValue = encodec.createHLAinteger32BE( runningExperiments );
+		HLAinteger32BE bufferCurrentLoadValue = encodec.createHLAinteger32BE( bufferCurrentLoad );
 		
 		attributes.put( macAddressAttributeHandle, macAddressValue.toByteArray() );
 		attributes.put( instanceInputBufferHandle, instanceInputBufferValue.toByteArray() );
-		attributes.put( instanceJoinInputBufferHandle, instanceJoinInputBufferValue.toByteArray() );
 		attributes.put( instanceOutputBufferHandle, instanceOutputBufferValue.toByteArray() );
 		attributes.put( runningExperimentsHandle, runningExperimentsValue.toByteArray() );
-		
+		attributes.put( bufferCurrentLoadHandle, bufferCurrentLoadValue.toByteArray() );
 		
 		rtiamb.updateAttributeValues( objectInstanceHandle, attributes, "Sagittarius Attributes".getBytes() );
 	}

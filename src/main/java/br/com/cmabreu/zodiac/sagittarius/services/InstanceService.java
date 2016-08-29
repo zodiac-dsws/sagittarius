@@ -82,10 +82,12 @@ public class InstanceService {
 		return pipes;
 	}
 	
+	/*
 	public List<Instance> getHeadJoin( int howMany, int idFragment ) throws Exception {
 		List<Instance> pipes = rep.getHeadJoin( howMany, idFragment );
 		return pipes;
 	}
+	*/
 
 	public List<Instance> recoverFromCrash( ) throws Exception {
 		List<Instance> pipes = rep.recoverFromCrash();

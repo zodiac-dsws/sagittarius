@@ -10,7 +10,10 @@ import java.util.Map;
 
 import br.com.cmabreu.zodiac.sagittarius.core.InstanceBuffer;
 import br.com.cmabreu.zodiac.sagittarius.core.Logger;
+import br.com.cmabreu.zodiac.sagittarius.core.instances.InstanceList;
+import br.com.cmabreu.zodiac.sagittarius.core.instances.InstanceListContainer;
 import br.com.cmabreu.zodiac.sagittarius.entity.Experiment;
+import br.com.cmabreu.zodiac.sagittarius.entity.Fragment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
@@ -44,7 +47,37 @@ public class SagittariusFederate {
 	private List<Experiment> runningExperiments;
 	
 	public int loadBuffers() throws Exception {
-		return instanceBuffer.loadBuffers();
+		int runningExperimentCount = getRunningExperiments().size(); 
+		if ( runningExperimentCount == 0 ) return 0;
+		InstanceListContainer listContainer = new InstanceListContainer();
+		
+		if ( instanceBuffer.canLoadMore() ) {
+			for ( Experiment experiment : getRunningExperiments() ) {
+				try {
+					List<Instance> common = instanceBuffer.loadBuffer( experiment, runningExperimentCount);
+					if ( common != null ) {
+						debug("found " + common.size() + " instances. Adding to container...");
+						listContainer.addList( new InstanceList( common, experiment.getTagExec() ) );
+					}
+				} catch ( Exception e ) {
+					
+					// ***************** No running instances found for this experiment (or error) *******************
+					// MUST FINISH THE RUNNIG FRAGMENTS AND TRY TO START ANOTHER OR FINISH EXPERIMENT 
+					// ***********************************************************************************************
+					
+					System.out.println("No more instances here: ");
+					for ( Fragment frag : experiment.getFragments() ) {
+						System.out.println( " > " + frag.getSerial() + " : " + frag.getStatus() + " " + instanceBuffer.isQueued(frag) );
+					}
+					
+				}
+			}
+		}
+		int buffer = instanceBuffer.merge( listContainer );
+		
+		System.out.println("Buffer current load: " + instanceBuffer.getBufferCurrentLoad() );
+		
+		return buffer;
 	}
 	
 	public void setMaxInputBufferCapacity(int maxInputBufferCapacity) {
@@ -91,7 +124,7 @@ public class SagittariusFederate {
 			instance.setExecutedBy( core.getOwnerNode() );
 			finishInstance( instance );
 		} else {
-			error("Instance " + instanceSerial + " is not in output buffer.");
+			warn("Instance " + instanceSerial + " is not in output buffer. Ignoring...");
 		}
 	}
 	
@@ -110,7 +143,7 @@ public class SagittariusFederate {
 	}
 	
 	public synchronized Instance getNextInstance(String macAddress) {
-		return instanceBuffer.getNextInstance( runningExperiments, macAddress );
+		return instanceBuffer.getNextInstance( macAddress, getRunningExperiments() );
 	}
 
 	
@@ -118,11 +151,6 @@ public class SagittariusFederate {
 		instance.triedAgain();
 		instanceBuffer.returnToBuffer(instance);
 	}
-	
-	public synchronized Instance getNextJoinInstance( String macAddress) {
-		return instanceBuffer.getNextJoinInstance( macAddress);
-	}	
-	
 	
 	// ============================== END OLD SAGITARII STUFF ================================================
 
@@ -215,9 +243,7 @@ public class SagittariusFederate {
 			sagittariusClass.publish();
 			// Create a new Server Object
 			sagittariusClass.createNew();
-			// Send Server attributes to the RTI.  
-			sagittariusClass.updateAttributeValues();
-			
+
 			// Subscribe to Scorpio Updates
 			scorpioClass = new ScorpioClass();
 			scorpioClass.subscribe();
@@ -335,7 +361,6 @@ public class SagittariusFederate {
 	public void checkCores() {
 		try {
 			for ( CoreObject core : coreClass.getCores()  ) {
-				System.out.println("Core : " + core.getSerial() + " " + core.getCurrentInstance() + " " + core.isWorking() );
 				if (  core.getCurrentInstance().equals("*")  && !core.isWorking() ) {
 					sendInstance( core.getHandle() );
 				}

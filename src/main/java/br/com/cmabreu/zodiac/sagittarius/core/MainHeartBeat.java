@@ -9,10 +9,8 @@ public class MainHeartBeat implements Runnable {
     public void run() {
     	try {
     		int newTotalPending = SagittariusFederate.getInstance().loadBuffers();
+    		SagittariusFederate.getInstance().getSagittariusClass().updateAttributeValues();
     		
-			//System.out.println("Pending instances before : " + totalPending );
-			//System.out.println("Pending instances now    : " + newTotalPending );
-			
     		if ( (totalPending == 0) && (newTotalPending > 0) ) {
     			SagittariusFederate.getInstance().checkCores();
     		}

@@ -19,20 +19,27 @@ public class Logger {
 		return instance;
 	}
 	
+	private String getClassName( String className ) {
+		String[] temp = className.split("\\.");
+		int pos = temp.length -1 ;
+		return temp[ pos ] ;
+	}
+	
 	public void debug( String className, String message ) {
 		if ( !enabled ) { return; }
-		System.out.println( "[DEBUG] " + className + " " + message);
+		System.out.println( "[DEBUG] " + getClassName(className) + " " + message);
 	}
 	
 	public void error( String className, String message ) {
 		if ( !enabled ) { return; }
-		System.out.println( "[ERROR] " + className + " " + message);
+		System.out.println( "[ERROR] " + getClassName(className) + " " + message);
 	}
 	
 	public void warn( String className, String message ) {
 		if ( !enabled ) { return; }
-		System.out.println( "[WARN] " + className + " " + message);
+		System.out.println( "[WARN] " + getClassName(className) + " " + message);
 	}
+
 	
 
 }

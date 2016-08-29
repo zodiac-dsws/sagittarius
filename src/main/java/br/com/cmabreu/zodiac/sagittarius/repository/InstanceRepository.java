@@ -39,19 +39,41 @@ public class InstanceRepository extends BasicRepository {
 	}
 	
 	
-	public List<Instance> getHead( int howMany, int idFragment ) throws Exception {
-		debug("get first " + howMany + " records for fragment " + idFragment );
+	/*
+		select ex.tagexec, frags.serial, frags.total_instances, inst.serial, inst.status from experiments ex 
+			join fragments frags on ex.id_experiment = frags.id_experiment 
+			join instances inst on inst.id_fragment = frags.id_fragment
+		where ex.id_experiment = 270 and frags.status = 'RUNNING' and inst.status = 'PIPELINED' 
+		order by inst.id_instance limit 10	
+	*/
+	public List<Instance> getHead( int howMany, int idExperiment ) throws Exception {
+		debug("get first " + howMany + " records for runnig fragments in experiment " + idExperiment );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
 		try {
+			
+			String newQuery = " experiments ex " + 
+					"join fragments frags on ex.id_experiment = frags.id_experiment " + 
+					"join instances inst on inst.id_fragment = frags.id_fragment " + 
+					"where ex.id_experiment = " + idExperiment + " and frags.status = 'RUNNING' and inst.status = 'PIPELINED' " + 
+					"order by inst.id_instance limit " + howMany; 
+			
+			/*
 			String selectQuery = "select * from instances where status = 'PIPELINED' and type <> 'SELECT' and id_fragment = " + idFragment  
 					+ " order by id_instance limit " + howMany;
+			*/
 			
-			pipes = fm.getList( selectQuery );
+			String query = "select inst.* from" + newQuery;
 			
-			String update ="update instances set start_date_time = now(), status = 'RUNNING' where id_instance in (select id_instance from instances where status = 'PIPELINED' and type <> 'SELECT' and id_fragment = " + idFragment  
-					+ " order by id_instance limit " + howMany + ")";
+			debug( query );
+			
+			pipes = fm.getList( query );
+			
+			String update ="update instances set start_date_time = now(), status = 'RUNNING' where id_instance in (select id_instance from" + 
+						newQuery + ")";
+			
+			debug( update );
 			
 			fm.executeQuery( update, true );
 		} catch (NotFoundException e) {
@@ -63,7 +85,7 @@ public class InstanceRepository extends BasicRepository {
 		return pipes;
 	}
 
-	
+	/*
 	public List<Instance> getHeadJoin( int howMany, int idFragment ) throws Exception {
 		debug("get first " + howMany + " JOIN records for fragment " + idFragment );
 		debug("get first " + howMany + " records" );
@@ -89,7 +111,8 @@ public class InstanceRepository extends BasicRepository {
 		return pipes;		
 		
 	}
-
+	*/
+	
 	public List<Instance> getPipelinedList( int idFragment ) throws NotFoundException {
 		debug("get list" );
 		DaoFactory<Instance> df = new DaoFactory<Instance>();

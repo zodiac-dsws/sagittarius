@@ -54,7 +54,7 @@ public class SagittariusClass {
 			instanceInputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceInputBuffer" );
 			instanceOutputBufferHandle = rtiamb.getAttributeHandle( classHandle, "InstanceOutputBuffer" );
 			runningExperimentsHandle = rtiamb.getAttributeHandle( classHandle, "RunningExperiments" );
-			bufferCurrentLoadHandle = rtiamb.getAttributeHandle( classHandle, "bufferCurrentLoad" );
+			bufferCurrentLoadHandle = rtiamb.getAttributeHandle( classHandle, "BufferCurrentLoad" );
 			
 			attributes.add( macAddressAttributeHandle );
 			attributes.add( instanceInputBufferHandle );

@@ -25,6 +25,7 @@ import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
 import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
 import br.com.cmabreu.zodiac.sagittarius.types.ExperimentStatus;
+import br.com.cmabreu.zodiac.sagittarius.types.FragmentStatus;
 import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
@@ -46,6 +47,76 @@ public class SagittariusFederate {
 	private InstanceBuffer instanceBuffer;
 	private List<Experiment> runningExperiments;
 	
+	
+	private void finishExperiment(Experiment experiment) {
+		System.out.println("Experiment " + experiment.getTagExec() + " finished.");
+		experiment.setStatus( ExperimentStatus.FINISHED );
+		runningExperiments.remove( experiment );
+	}
+	
+	private void startNextActivities( Experiment exp ) {
+		System.out.println("Start next activities...");
+		/*
+		try {
+			FragmentInstancer fp = new FragmentInstancer( exp );
+			fp.generate();
+			int pips = fp.getInstances().size();
+			if ( pips == 0) {
+				logger.debug("experiment " + exp.getTagExec() + " generate empty instance list. Will finish it" );
+				haveReady = false;
+			} 
+		} catch (Exception e) {
+			logger.error("cannot generate instances for experiment " + exp.getTagExec() + ": " + e.getMessage() );
+			haveReady = false;
+		}
+		logger.debug("done generating instances (" + exp.getTagExec() + ")");
+		*/
+	}
+
+	private void finishFragment( Fragment frag ) {
+		System.out.println("Fragment " + frag.getSerial() + " finished.");
+		frag.setStatus( FragmentStatus.FINISHED );
+	}
+	
+	private void tryToFinish( Experiment experiment ) {
+		debug("Trying to finish experiment " + experiment.getTagExec() );
+		int totalFragments = experiment.getFragments().size();
+		int totalFinished = 0;
+		boolean haveMore = false;
+
+		// First check all fragments to see if there is some to process
+		for ( Fragment frag : experiment.getFragments() ) {
+			if ( ( frag.getStatus() != FragmentStatus.RUNNING ) && ( frag.getStatus() != FragmentStatus.FINISHED ) ) {
+				haveMore = true ;
+			}
+		}
+		
+		// Now do the other checks
+		for ( Fragment frag : experiment.getFragments() ) {
+			System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + instanceBuffer.isQueued(frag) );
+			boolean isQueued = instanceBuffer.isQueued( frag );
+			
+			if ( ( frag.getStatus() == FragmentStatus.RUNNING ) && ( !isQueued ) ) {
+				finishFragment( frag );
+				if ( haveMore ) {
+					startNextActivities( experiment );
+					return;
+				}
+			}
+
+			if ( ( frag.getStatus() == FragmentStatus.FINISHED ) && ( !isQueued ) ) {
+				totalFinished++;
+			}
+			
+			if ( (totalFinished == totalFragments) && !haveMore ) {
+				System.out.println("No more Fragments. Finish experiment.");
+				finishExperiment( experiment );
+			}
+			
+		}
+		
+	}
+	
 	public int loadBuffers() throws Exception {
 		int runningExperimentCount = getRunningExperiments().size(); 
 		if ( runningExperimentCount == 0 ) return 0;
@@ -60,16 +131,10 @@ public class SagittariusFederate {
 						listContainer.addList( new InstanceList( common, experiment.getTagExec() ) );
 					}
 				} catch ( Exception e ) {
-					
 					// ***************** No running instances found for this experiment (or error) *******************
 					// MUST FINISH THE RUNNIG FRAGMENTS AND TRY TO START ANOTHER OR FINISH EXPERIMENT 
 					// ***********************************************************************************************
-					
-					System.out.println("No more instances here: ");
-					for ( Fragment frag : experiment.getFragments() ) {
-						System.out.println( " > " + frag.getSerial() + " : " + frag.getStatus() + " " + instanceBuffer.isQueued(frag) );
-					}
-					
+					tryToFinish( experiment );
 				}
 			}
 		}

@@ -23,14 +23,7 @@ public class InstanceBuffer {
 	}
 	
 	public boolean canLoadMore() {
-		if ( getInstanceInputBufferSize() < ( bufferSize / 3 ) ) {
-			return true;
-		} else {
-			float x1 = Float.valueOf( getInstanceInputBufferSize() ) ;
-			float y1 = Float.valueOf( bufferSize );
-			bufferCurrentLoad = Math.round( x1 / y1 * 100 );
-			return false;
-		}
+		return ( getInstanceInputBufferSize() < ( bufferSize / 3 ) );
 	}
 	
 	public int merge( InstanceListContainer listContainer ) {
@@ -49,6 +42,9 @@ public class InstanceBuffer {
 	}
 
 	public int getBufferCurrentLoad() {
+		float x1 = Float.valueOf( getInstanceInputBufferSize() ) ;
+		float y1 = Float.valueOf( bufferSize );
+		bufferCurrentLoad = Math.round( x1 / y1 * 100 );
 		return bufferCurrentLoad;
 	}
 	
@@ -124,13 +120,11 @@ public class InstanceBuffer {
 	}
 	
 	public synchronized void returnToBuffer( Instance instance ) {
-		debug("instance refund: " + instance.getSerial() );
+		debug("instance " + instance.getSerial() + " moved back to the input buffer" );
 		if ( instanceOutputBuffer.remove( instance ) ) {
 			instanceInputBuffer.add( instance );
-			debug(" > to the common buffer" );
 		}
 	}
-	
 	
 	/**
 	 *	Discard instances in buffer that have no experiments (deleted) 

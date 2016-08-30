@@ -8,14 +8,14 @@ public class MainHeartBeat implements Runnable {
     @Override
     public void run() {
     	try {
-    		int newTotalPending = SagittariusFederate.getInstance().loadBuffers();
-    		SagittariusFederate.getInstance().getSagittariusClass().updateAttributeValues();
-    		
-    		if ( (totalPending == 0) && (newTotalPending > 0) ) {
-    			SagittariusFederate.getInstance().checkCores();
-    		}
-    		
-    		totalPending = newTotalPending;
+			int newTotalPending = SagittariusFederate.getInstance().loadBuffers();
+			SagittariusFederate.getInstance().getSagittariusClass().updateAttributeValues();
+			
+			if ( (totalPending == 0) && (newTotalPending > 0) ) {
+				SagittariusFederate.getInstance().checkCores();
+			}
+			
+			totalPending = newTotalPending;
     		
     	} catch ( Exception e ) {
     		

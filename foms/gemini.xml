@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <objectModel xsi:schemaLocation="http://standards.ieee.org/IEEE1516-2010 http://standards.ieee.org/downloads/1516/1516.2-2010/IEEE1516-DIF-2010.xsd" xmlns="http://standards.ieee.org/IEEE1516-2010" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelIdentification>
-        <name>Zodiac Federation FOM</name>
-        <type>FOM</type>
+        <name>Gemini SOM</name>
+        <type>SOM</type>
         <version>1.0</version>
-        <modificationDate>2015-11-13</modificationDate>
+        <modificationDate>2016-08-22</modificationDate>
         <securityClassification>Unclassified</securityClassification>
-        <purpose>Basic specifications to the Federation</purpose>
+        <purpose>Gemini SOM</purpose>
         <applicationDomain>Engineering</applicationDomain>
-        <description>FOM for the Zodiac Federation.</description>
+        <description>Gemini SOM</description>
         <useLimitation>None</useLimitation>
         <poc>
             <pocType>Primary author</pocType>
@@ -25,29 +25,27 @@
     <objects>
         <objectClass>
             <name>HLAobjectRoot</name>
+            <objectClass>
+                <name>Gemini</name>
+                <sharing>PublishSubscribe</sharing>
+                <semantics>The Gemini Instance Generator</semantics>
+				
+                <attribute>
+                    <name>MACAddress</name>
+                    <dataType>HLAunicodeString</dataType>
+                    <updateType>Static</updateType>
+                    <updateCondition>NA</updateCondition>
+                    <ownership>NoTransfer</ownership>
+                    <sharing>PublishSubscribe</sharing>
+                    <dimensions/>
+                    <transportation>HLAreliable</transportation>
+                    <order>Receive</order>
+                    <semantics>Computer's MAC Address</semantics>
+                </attribute>
+				
+			</objectClass>
         </objectClass>
     </objects>
-	
-    <interactions>
-        <interactionClass>
-            <name>HLAinteractionRoot</name>
-
-            <interactionClass>
-                <name>GenerateInstances</name>
-                <sharing>PublishSubscribe</sharing>
-                <dimensions/>
-                <transportation>HLAreliable</transportation>
-                <order>Receive</order>
-                <semantics>Command Gemini to generate new Instances</semantics>
-                <parameter>
-                    <name>ExperimentSerial</name>
-                    <dataType>HLAunicodeString</dataType>
-                    <semantics>The serial number of Experiment</semantics>
-                </parameter>
-            </interactionClass>
-
-		</interactionClass>
-	</interactions>
 	
     <switches>
         <autoProvide isEnabled="true"/>

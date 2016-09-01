@@ -35,14 +35,13 @@ public class SagittariusClass {
 	}
 	
 	public void createNew() throws RTIexception {
-		debug("new HLA Sagittarius Object instance created");
+		debug("Sagittarius created");
 		ObjectInstanceHandle handle = rtiamb.registerObjectInstance( classHandle, "Sagittarius" );
 		sagittarius = new SagittariusObject( handle );
 	}	
 	
 	public SagittariusClass() {
 		try {
-			debug("new server");
 			rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			classHandle = rtiamb.getObjectClassHandle( "HLAobjectRoot.Sagittarius" );
 			
@@ -68,7 +67,6 @@ public class SagittariusClass {
 	}
 	
 	public void updateAttributeValues() throws Exception {
-		debug("updating attributes");
 		String macAddress = sagittarius.getMacAddress();
 		int instanceInputBuffer = SagittariusFederate.getInstance().getInstanceBuffer().getInstanceInputBufferSize();
 		int bufferCurrentLoad = SagittariusFederate.getInstance().getInstanceBuffer().getBufferCurrentLoad();

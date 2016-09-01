@@ -18,6 +18,7 @@ import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.GenerateInstancesInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
@@ -42,6 +43,7 @@ public class SagittariusFederate {
 	private SagittariusClass sagittariusClass;
 	private ScorpioClass scorpioClass;
 	private CoreClass coreClass;
+	private GenerateInstancesInteractionClass generateInstancesInteractionClass;
 	
 	// ==== OLD SAGITARII ========================
 	private InstanceBuffer instanceBuffer;
@@ -56,21 +58,13 @@ public class SagittariusFederate {
 	
 	private void startNextActivities( Experiment exp ) {
 		System.out.println("Start next activities...");
-		/*
+		
 		try {
-			FragmentInstancer fp = new FragmentInstancer( exp );
-			fp.generate();
-			int pips = fp.getInstances().size();
-			if ( pips == 0) {
-				logger.debug("experiment " + exp.getTagExec() + " generate empty instance list. Will finish it" );
-				haveReady = false;
-			} 
-		} catch (Exception e) {
-			logger.error("cannot generate instances for experiment " + exp.getTagExec() + ": " + e.getMessage() );
-			haveReady = false;
+			generateInstancesInteractionClass.send( exp.getTagExec() );
+		} catch ( Exception e) {
+			e.printStackTrace();
 		}
-		logger.debug("done generating instances (" + exp.getTagExec() + ")");
-		*/
+		
 	}
 
 	private void finishFragment( Fragment frag ) {
@@ -137,11 +131,14 @@ public class SagittariusFederate {
 					tryToFinish( experiment );
 				}
 			}
+			
+			
+		} else {
+			// 
 		}
+
 		int buffer = instanceBuffer.merge( listContainer );
-		
 		System.out.println("Buffer current load: " + instanceBuffer.getBufferCurrentLoad() );
-		
 		return buffer;
 	}
 	
@@ -219,6 +216,10 @@ public class SagittariusFederate {
 	
 	// ============================== END OLD SAGITARII STUFF ================================================
 
+	public GenerateInstancesInteractionClass getGenerateInstancesInteractionClass() {
+		return generateInstancesInteractionClass;
+	}
+	
 	public static SagittariusFederate getInstance() throws Exception {
 		if ( instance == null ) {
 			instance = new SagittariusFederate();
@@ -318,6 +319,10 @@ public class SagittariusFederate {
 			coreClass.subscribe();
 			coreClass.publishCurrentInstance();
 
+			// Allow to send generate instances commands to Gemini
+			generateInstancesInteractionClass = new GenerateInstancesInteractionClass();
+			generateInstancesInteractionClass.publish();				
+			
 			debug("done.");
 			
 		} else {
@@ -345,6 +350,7 @@ public class SagittariusFederate {
 			(new File(rootPath +  "/foms/zodiac.xml")).toURI().toURL(),	
 		    (new File(rootPath +  "/foms/sagittarius.xml")).toURI().toURL(),
 		    (new File(rootPath +  "/foms/core.xml")).toURI().toURL(),
+			(new File(rootPath +  "/foms/gemini.xml")).toURI().toURL(),	
 		    (new File(rootPath +  "/foms/scorpio.xml")).toURI().toURL()
 		};
 		rtiamb.joinFederationExecution( "Sagittarius", "SagittariusType", "Zodiac", joinModules );           

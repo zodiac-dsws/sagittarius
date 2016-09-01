@@ -16,11 +16,11 @@ public class Main {
 	private ScheduledExecutorService scheduler;
 	
     private void loggerDebug( String log ) {
-    	System.out.println( log );
+    	System.out.println( "[DEBUG] Main " + log );
     }
     
     private void loggerError( String log ){
-    	System.out.println( log );
+    	System.out.println( "[ERROR] Main " + log );
     }
 
 
@@ -36,7 +36,7 @@ public class Main {
     		int interval = 5;
     		int maxInputBufferCapacity = 500;
     		
-    		Logger.getInstance().disable();
+    		Logger.getInstance().enable();
        
 			Configurator config = Configurator.getInstance("config.xml");
 			config.loadMainConfig();

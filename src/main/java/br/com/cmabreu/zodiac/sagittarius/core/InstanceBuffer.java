@@ -34,9 +34,10 @@ public class InstanceBuffer {
 			} else {
 				// None was found
 			}
-			debug("instance buffer size: " + instanceInputBuffer.size() );
+			System.out.println("buffer current capacity utilization: " + instanceInputBuffer.size() + " of " + bufferSize + "(" + 
+					getBufferCurrentLoad() + "%)" );
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return instanceInputBuffer.size() ;
 	}

@@ -138,7 +138,7 @@ public class SagittariusFederate {
 		}
 
 		int buffer = instanceBuffer.merge( listContainer );
-		System.out.println("Buffer current load: " + instanceBuffer.getBufferCurrentLoad() );
+		
 		return buffer;
 	}
 	

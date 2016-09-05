@@ -57,7 +57,7 @@ public class SagittariusFederate {
 	}
 	
 	private void startNextActivities( Experiment exp ) {
-		System.out.println("Start next activities...");
+		debug("Start next activities...");
 		
 		try {
 			generateInstancesInteractionClass.send( exp.getTagExec() );
@@ -68,7 +68,7 @@ public class SagittariusFederate {
 	}
 
 	private void finishFragment( Fragment frag ) {
-		System.out.println("Fragment " + frag.getSerial() + " finished.");
+		debug("Fragment " + frag.getSerial() + " finished.");
 		frag.setStatus( FragmentStatus.FINISHED );
 	}
 	
@@ -87,8 +87,9 @@ public class SagittariusFederate {
 		
 		// Now do the other checks
 		for ( Fragment frag : experiment.getFragments() ) {
-			System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + instanceBuffer.isQueued(frag) );
 			boolean isQueued = instanceBuffer.isQueued( frag );
+			
+			System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + isQueued );
 			
 			if ( ( frag.getStatus() == FragmentStatus.RUNNING ) && ( !isQueued ) ) {
 				finishFragment( frag );
@@ -103,7 +104,7 @@ public class SagittariusFederate {
 			}
 			
 			if ( (totalFinished == totalFragments) && !haveMore ) {
-				System.out.println("No more Fragments. Finish experiment.");
+				debug("No more Fragments. Finish experiment.");
 				finishExperiment( experiment );
 			}
 			

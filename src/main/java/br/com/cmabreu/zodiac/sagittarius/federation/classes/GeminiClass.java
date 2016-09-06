@@ -33,6 +33,8 @@ public class GeminiClass {
 			} catch ( Exception e ) {
 				error("Error requesting Instance genesis to Gemini: " + e.getMessage() );
 			}
+		} else {
+			debug("Already have a working Gemini. Nothing to do.");
 		}
 	}	
 	

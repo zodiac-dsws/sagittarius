@@ -65,10 +65,11 @@ public class Main {
 				loggerDebug("no running experiments found");	
 			}			
 
-	        SagittariusFederate.getInstance().loadBuffers();	        
+	       	        
 	        loggerDebug("Buffer cabacity " + maxInputBufferCapacity );
 	        SagittariusFederate.getInstance().setMaxInputBufferCapacity( maxInputBufferCapacity );
 	        SagittariusFederate.getInstance().startServer();
+	        SagittariusFederate.getInstance().loadBuffers();
 
 			scheduler = Executors.newSingleThreadScheduledExecutor();
 	        MainHeartBeat as = new MainHeartBeat();

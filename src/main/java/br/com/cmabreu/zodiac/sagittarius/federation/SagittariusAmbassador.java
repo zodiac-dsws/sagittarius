@@ -54,9 +54,21 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	@Override
 	public void discoverObjectInstance( ObjectInstanceHandle theObject, ObjectClassHandle theObjectClass, String objectName ) throws FederateInternalError {
 		try {
+
+			if ( SagittariusFederate.getInstance().getGeminiClass().isSameOf( theObjectClass ) ) {
+				try {
+					debug("New Gemini discovered (" + objectName + ")");
+					SagittariusFederate.getInstance().getGeminiClass().createNew( theObject );
+					
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
+			}
+			
+			
 			if ( SagittariusFederate.getInstance().getCoreClass().isSameOf( theObjectClass ) ) {
 				try {
-					debug("New Core object " + theObject + " discovered (" + objectName + ")");
+					debug("New Core discovered (" + objectName + ")");
 					SagittariusFederate.getInstance().getCoreClass().createNew( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();
@@ -65,7 +77,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			
 			if ( SagittariusFederate.getInstance().getScorpioClass().isSameOf( theObjectClass ) ) {
 				try {
-					debug("New Scorpio object " + theObject + " discovered (" + objectName + ")");
+					debug("New Scorpio discovered (" + objectName + ")");
 					SagittariusFederate.getInstance().getScorpioClass().createNew( theObject );
 				} catch ( Exception e ) {
 					e.printStackTrace();

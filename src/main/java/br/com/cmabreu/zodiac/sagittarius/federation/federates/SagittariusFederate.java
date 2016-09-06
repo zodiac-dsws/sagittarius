@@ -18,12 +18,14 @@ import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.GeminiClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.GenerateInstancesInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
 import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
+import br.com.cmabreu.zodiac.sagittarius.services.FragmentService;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
 import br.com.cmabreu.zodiac.sagittarius.types.ExperimentStatus;
 import br.com.cmabreu.zodiac.sagittarius.types.FragmentStatus;
@@ -43,6 +45,7 @@ public class SagittariusFederate {
 	private SagittariusClass sagittariusClass;
 	private ScorpioClass scorpioClass;
 	private CoreClass coreClass;
+	private GeminiClass geminiClass;
 	private GenerateInstancesInteractionClass generateInstancesInteractionClass;
 	
 	// ==== OLD SAGITARII ========================
@@ -57,8 +60,12 @@ public class SagittariusFederate {
 	}
 	
 	private void startNextActivities( Experiment exp ) {
-		debug("Start next activities...");
+		// TODO: IMPORTANT
+		// Subscribe to Gemini to know if there is some to process
+		// this request. Warning the user if not.
+		// Send again when discover new Gemini object in Federation
 		
+		debug("Start next activities...");
 		try {
 			generateInstancesInteractionClass.send( exp.getTagExec() );
 		} catch ( Exception e) {
@@ -68,8 +75,39 @@ public class SagittariusFederate {
 	}
 
 	private void finishFragment( Fragment frag ) {
-		debug("Fragment " + frag.getSerial() + " finished.");
-		frag.setStatus( FragmentStatus.FINISHED );
+		debug("Fragment " + frag.getSerial() + " will finish...");
+		try {
+			frag.setStatus( FragmentStatus.FINISHED );
+			FragmentService fragmentService = new FragmentService();
+			fragmentService.updateFragment(frag);
+			debug("Fragment " + frag.getSerial() + " finished.");
+		} catch ( Exception e ) {
+			error("Error setting Fragment " + frag.getSerial() + " to finished: " + e.getMessage() );
+			
+		}
+	}
+	
+	// New gemini found. If this is the first one then request again to create instances.
+	public void requestCreateInstancesAgain() {
+		debug("Found a Gemini to work! Asking again to generate instances for Experiments: ");
+		for ( Experiment experiment : getRunningExperiments() ) {
+			debug(" > " + experiment.getTagExec() );
+			
+			boolean haveMore = false;
+			boolean isQueued = false;
+			boolean allStopped = true;
+			
+			for ( Fragment frag : experiment.getFragments() ) {
+				if ( frag.getStatus() == FragmentStatus.READY  ) haveMore = true;
+				if ( instanceBuffer.isQueued( frag ) ) isQueued = true;
+				if ( frag.getStatus() == FragmentStatus.RUNNING  ) allStopped = false;
+			}
+			
+			if ( haveMore && allStopped && !isQueued ) {
+				startNextActivities( experiment );
+			}
+			
+		}
 	}
 	
 	private void tryToFinish( Experiment experiment ) {
@@ -80,14 +118,14 @@ public class SagittariusFederate {
 
 		// First check all fragments to see if there is some to process
 		for ( Fragment frag : experiment.getFragments() ) {
-			if ( ( frag.getStatus() != FragmentStatus.RUNNING ) && ( frag.getStatus() != FragmentStatus.FINISHED ) ) {
+			if ( frag.getStatus() == FragmentStatus.READY  ) {
 				haveMore = true ;
 			}
 		}
 		
 		// Now do the other checks
 		for ( Fragment frag : experiment.getFragments() ) {
-			boolean isQueued = instanceBuffer.isQueued( frag );
+			boolean isQueued = instanceBuffer.isQueued( frag ); 
 			
 			System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + isQueued );
 			
@@ -319,6 +357,10 @@ public class SagittariusFederate {
 			coreClass = new CoreClass();
 			coreClass.subscribe();
 			coreClass.publishCurrentInstance();
+			
+			// Subscribe to know about Gemini online
+			geminiClass = new GeminiClass();
+			geminiClass.subscribe();
 
 			// Allow to send generate instances commands to Gemini
 			generateInstancesInteractionClass = new GenerateInstancesInteractionClass();
@@ -337,6 +379,10 @@ public class SagittariusFederate {
 	
 	public ScorpioClass getScorpioClass() {
 		return scorpioClass;
+	}
+	
+	public GeminiClass getGeminiClass() {
+		return geminiClass;
 	}
 	
 	public CoreClass getCoreClass() {

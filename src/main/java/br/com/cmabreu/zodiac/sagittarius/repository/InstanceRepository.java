@@ -59,11 +59,6 @@ public class InstanceRepository extends BasicRepository {
 					"where ex.id_experiment = " + idExperiment + " and frags.status = 'RUNNING' and inst.status = 'PIPELINED' " + 
 					"order by inst.id_instance limit " + howMany; 
 			
-			/*
-			String selectQuery = "select * from instances where status = 'PIPELINED' and type <> 'SELECT' and id_fragment = " + idFragment  
-					+ " order by id_instance limit " + howMany;
-			*/
-			
 			String query = "select inst.* from" + newQuery;
 			
 			debug( query );

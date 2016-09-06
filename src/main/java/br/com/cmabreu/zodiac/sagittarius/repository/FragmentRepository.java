@@ -128,10 +128,6 @@ public class FragmentRepository extends BasicRepository {
 		Logger.getInstance().debug(this.getClass().getName(), s );
 	}	
 
-	private void warn( String s ) {
-		Logger.getInstance().warn(this.getClass().getName(), s );
-	}	
-
 	private void error( String s ) {
 		Logger.getInstance().error(this.getClass().getName(), s );
 	}		

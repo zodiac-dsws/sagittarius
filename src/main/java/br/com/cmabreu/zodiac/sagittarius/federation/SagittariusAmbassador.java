@@ -1,5 +1,6 @@
 package br.com.cmabreu.zodiac.sagittarius.federation;
 
+
 import br.com.cmabreu.zodiac.sagittarius.core.Logger;
 import br.com.cmabreu.zodiac.sagittarius.federation.federates.SagittariusFederate;
 import hla.rti1516e.AttributeHandleSet;
@@ -133,7 +134,13 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			byte[] userSuppliedTag, OrderType sentOrdering,	TransportationTypeHandle theTransport, 
 			SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
 		
-		// 
+		try {
+			if ( SagittariusFederate.getInstance().isExperimentStartedInteraction( interactionClass ) ) {
+				SagittariusFederate.getInstance().experimentStarted( theParameters );
+			}
+		} catch ( Exception e ) {
+			error("Error starting experiment: " + e.getMessage() );
+		}
 	}
 	
 	private void debug( String s ) {

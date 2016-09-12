@@ -36,7 +36,7 @@ public class Main {
     		int interval = 5;
     		int maxInputBufferCapacity = 500;
     		
-    		Logger.getInstance().enable();
+    		Logger.getInstance().disable();
        
 			Configurator config = Configurator.getInstance("config.xml");
 			config.loadMainConfig();
@@ -53,7 +53,6 @@ public class Main {
 			
     		ConnFactory.setCredentials(user, passwd, database);
 
-   		
 			loggerDebug("check for interrupted work");	
 			try {
 				ExperimentService ws = new ExperimentService();
@@ -74,7 +73,6 @@ public class Main {
 			scheduler = Executors.newSingleThreadScheduledExecutor();
 	        MainHeartBeat as = new MainHeartBeat();
 	        scheduler.scheduleAtFixedRate(as, interval, interval , TimeUnit.SECONDS);
-
 
 		} catch (Exception e) { 
 			System.out.println( e.getMessage() );

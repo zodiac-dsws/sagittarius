@@ -18,6 +18,7 @@ import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.ExperimentStartedInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.GeminiClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.GenerateInstancesInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
@@ -25,6 +26,7 @@ import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
 import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
 import br.com.cmabreu.zodiac.sagittarius.misc.ZipUtil;
+import br.com.cmabreu.zodiac.sagittarius.services.ExperimentService;
 import br.com.cmabreu.zodiac.sagittarius.services.FragmentService;
 import br.com.cmabreu.zodiac.sagittarius.services.InstanceService;
 import br.com.cmabreu.zodiac.sagittarius.types.ExperimentStatus;
@@ -32,7 +34,9 @@ import br.com.cmabreu.zodiac.sagittarius.types.FragmentStatus;
 import br.com.cmabreu.zodiac.sagittarius.types.InstanceStatus;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
+import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.FederatesCurrentlyJoined;
@@ -47,11 +51,25 @@ public class SagittariusFederate {
 	private CoreClass coreClass;
 	private GeminiClass geminiClass;
 	private GenerateInstancesInteractionClass generateInstancesInteractionClass;
+	private ExperimentStartedInteractionClass experimentStartedInteractionClass;
 	
 	// ==== OLD SAGITARII ========================
 	private InstanceBuffer instanceBuffer;
 	private List<Experiment> runningExperiments;
 	
+	public void experimentStarted(ParameterHandleValueMap theParameters) {
+		String experimentSerial = experimentStartedInteractionClass.getExperimentSerial( theParameters );
+		debug("Gemini started Experiment " + experimentSerial + ". Will add it to the buffer..." );
+		
+		try {
+			ExperimentService es = new ExperimentService();
+			Experiment exp = es.getExperiment(experimentSerial);
+			addRunningExperiment( exp );
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+		
+	}	
 	
 	private void finishExperiment(Experiment experiment) {
 		System.out.println("Experiment " + experiment.getTagExec() + " finished.");
@@ -60,18 +78,12 @@ public class SagittariusFederate {
 	}
 	
 	private void startNextActivities( Experiment exp ) {
-		// TODO: IMPORTANT
-		// Subscribe to Gemini to know if there is some to process
-		// this request. Warning the user if not.
-		// Send again when discover new Gemini object in Federation
-		
 		debug("Start next activities...");
 		try {
 			generateInstancesInteractionClass.send( exp.getTagExec() );
 		} catch ( Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	private void finishFragment( Fragment frag ) {
@@ -89,7 +101,7 @@ public class SagittariusFederate {
 	
 	// New gemini found. If this is the first one then request again to create instances.
 	public void requestCreateInstancesAgain() {
-		debug("Found a Gemini to work! Asking again to generate instances for Experiments: ");
+		debug("Asking again to generate instances for Experiments: ");
 		for ( Experiment experiment : getRunningExperiments() ) {
 			debug(" > " + experiment.getTagExec() );
 			
@@ -206,7 +218,8 @@ public class SagittariusFederate {
 		}
 		if ( !found && ( experiment.getStatus() == ExperimentStatus.RUNNING ) ) {
 			runningExperiments.add( experiment );
-			//updateFragments();
+			//updateFragments(); 
+			What ????
 		}
 	}	
 	
@@ -358,14 +371,18 @@ public class SagittariusFederate {
 			coreClass.subscribe();
 			coreClass.publishCurrentInstance();
 			
+			// Allow to send generate instances commands to Gemini
+			generateInstancesInteractionClass = new GenerateInstancesInteractionClass();
+			generateInstancesInteractionClass.publish();				
+
+			// Listen to new Running Experiments
+			experimentStartedInteractionClass = new ExperimentStartedInteractionClass();
+			experimentStartedInteractionClass.subscribe();			
+			
 			// Subscribe to know about Gemini online
 			geminiClass = new GeminiClass();
 			geminiClass.subscribe();
 
-			// Allow to send generate instances commands to Gemini
-			generateInstancesInteractionClass = new GenerateInstancesInteractionClass();
-			generateInstancesInteractionClass.publish();				
-			
 			debug("done.");
 			
 		} else {
@@ -487,7 +504,10 @@ public class SagittariusFederate {
 			e.printStackTrace();
 		}
 		
-	}	
-	
-	
+	}
+
+	public boolean isExperimentStartedInteraction(InteractionClassHandle interactionClassHandle) {
+		return experimentStartedInteractionClass.getInteractionClassHandle().equals( interactionClassHandle );
+	}
+
 }

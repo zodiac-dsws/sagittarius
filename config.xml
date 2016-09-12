@@ -20,9 +20,10 @@
 		<CSVDelimiter>,</CSVDelimiter>
 		<useDynamicLoadBalancer>true</useDynamicLoadBalancer>
 		<hadoopConfigPath>/opt/hadoop/hadoop/etc/hadoop/</hadoopConfigPath>
-		
-		<databaseName>sagittarius</databaseName>
 
+		<foms>d:/foms/</foms>
+		
+		<databaseName>sagitarii</databaseName>
 		<userName>postgres</userName>
 		<password>admin</password>
 		

@@ -27,6 +27,10 @@ public class ExperimentService {
 		rep.newTransaction();
 	}
 	
+	public Experiment getExperiment( String experimentSerial ) throws NotFoundException {
+		return rep.getExperiment( experimentSerial );
+	}	
+	
 	private Experiment insertExperiment(Experiment experiment) throws InsertException {
 		Experiment expRet = rep.insertExperiment( experiment );
 		return expRet ;
@@ -78,11 +82,5 @@ public class ExperimentService {
 		Logger.getInstance().debug(this.getClass().getName(), s );
 	}	
 
-	private void warn( String s ) {
-		Logger.getInstance().warn(this.getClass().getName(), s );
-	}	
-
-	private void error( String s ) {
-		Logger.getInstance().error(this.getClass().getName(), s );
-	}		
+	
 }

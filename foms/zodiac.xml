@@ -46,6 +46,21 @@
                 </parameter>
             </interactionClass>
 
+            <interactionClass>
+                <name>ExperimentStarted</name>
+                <sharing>PublishSubscribe</sharing>
+                <dimensions/>
+                <transportation>HLAreliable</transportation>
+                <order>Receive</order>
+                <semantics>Gemini will broadcast when a experiment starts to run</semantics>
+                <parameter>
+                    <name>ExperimentSerial</name>
+                    <dataType>HLAunicodeString</dataType>
+                    <semantics>The serial number of Experiment</semantics>
+                </parameter>
+            </interactionClass>
+			
+			
 		</interactionClass>
 	</interactions>
 	

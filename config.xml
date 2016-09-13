@@ -21,8 +21,6 @@
 		<useDynamicLoadBalancer>true</useDynamicLoadBalancer>
 		<hadoopConfigPath>/opt/hadoop/hadoop/etc/hadoop/</hadoopConfigPath>
 
-		<foms>d:/foms/</foms>
-		
 		<databaseName>sagitarii</databaseName>
 		<userName>postgres</userName>
 		<password>admin</password>

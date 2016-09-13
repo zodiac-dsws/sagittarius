@@ -15,6 +15,7 @@ import br.com.cmabreu.zodiac.sagittarius.core.instances.InstanceListContainer;
 import br.com.cmabreu.zodiac.sagittarius.entity.Experiment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Fragment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
+import br.com.cmabreu.zodiac.sagittarius.exceptions.NotFoundException;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
@@ -68,7 +69,24 @@ public class SagittariusFederate {
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
+	}	
+
+	public synchronized void addRunningExperiment( Experiment experiment ) throws Exception {
+		for ( Experiment exp : getRunningExperiments() ) {
+			if ( exp.getTagExec().equalsIgnoreCase( experiment.getTagExec() ) ) {
+				error("Experiment " + experiment.getTagExec() + " is already in the buffer. Aborting...");
+				return;
+			}
+		}
 		
+		if ( experiment.getStatus() == ExperimentStatus.RUNNING ) {
+			debug("Experiment " + experiment.getTagExec() + " is running and not in the buffer. Loading Fragments...");
+			FragmentService fs = new FragmentService();
+			experiment.setFragments( fs.getList( experiment.getIdExperiment() ) );
+			runningExperiments.add( experiment );
+			updateFragments(); 
+			debug("Experiment " + experiment.getTagExec() + " is now ready to process.");
+		}
 	}	
 	
 	private void finishExperiment(Experiment experiment) {
@@ -176,19 +194,16 @@ public class SagittariusFederate {
 						listContainer.addList( new InstanceList( common, experiment.getTagExec() ) );
 					}
 				} catch ( Exception e ) {
-					// ***************** No running instances found for this experiment (or error) *******************
-					// MUST FINISH THE RUNNIG FRAGMENTS AND TRY TO START ANOTHER OR FINISH EXPERIMENT 
-					// ***********************************************************************************************
 					tryToFinish( experiment );
 				}
 			}
-			
-			
 		} else {
 			// 
 		}
-
 		int buffer = instanceBuffer.merge( listContainer );
+		
+		// TODO: Really??
+		//updateFragments();
 		
 		return buffer;
 	}
@@ -209,19 +224,63 @@ public class SagittariusFederate {
 		this.runningExperiments = runningExperiments;
 	}
 	
-	public synchronized void addRunningExperiment( Experiment experiment ) throws Exception {
-		boolean found = false;
+	// ********************** UPDATE FRAGMENTS *********************************
+	
+	private synchronized void updateFragments() throws Exception {
+		debug("Updating Fragments...");
+		
 		for ( Experiment exp : runningExperiments ) {
-			if ( exp.getTagExec().equalsIgnoreCase( experiment.getTagExec() ) ) {
-				found = true;
+			for ( Fragment frag : exp.getFragments() ) {
+				FragmentStatus oldStatus = frag.getStatus();
+				int count = frag.getRemainingInstances();
+				debug("Frag: " + frag.getSerial() + " Status: " + frag.getStatus() + " Instances: " + count );
+				
+				// Case 1 --------------------------------------------------------------------
+				if ( (frag.getStatus() == FragmentStatus.PIPELINED) && (count > 0) ) {
+					debug(" > " + count + " instances found. Changing fragment " + frag.getSerial() + " status from PIPELINED to RUNNING");
+					frag.setStatus( FragmentStatus.RUNNING );
+				}
+
+				// Case 2 --------------------------------------------------------------------
+				if ( frag.getStatus() == FragmentStatus.RUNNING ) {
+					debug(" > updating instance count");
+					
+					// TODO: Check buffers BEFORE check database.
+					// If we still have instances in buffers, no need to hit database, right?
+					
+					try {
+						InstanceService instanceService = new InstanceService(); 
+						count = instanceService.getPipelinedList( frag.getIdFragment() ).size();
+						debug(" > found " + count + " instances in database");
+					} catch ( NotFoundException e) {
+						debug(" > this fragment have no instances in database");
+						count = 0;
+					} 
+					
+					frag.setRemainingInstances( count );
+					if ( count == 0 ) {
+						tryToFinish( exp );
+						continue;
+					}
+					
+					if ( oldStatus != frag.getStatus() ) {
+						debug(" > fragment " + frag.getSerial() + " status is now '" + frag.getStatus()  + "' in database");
+						FragmentService fragmentService = new FragmentService();
+						fragmentService.updateFragment(frag);
+						fragmentService = null;
+					} else {
+						debug(" > fragment " + frag.getSerial() + " status still as '" + frag.getStatus()+ "'" );
+					}
+					
+				}
+				
 			}
 		}
-		if ( !found && ( experiment.getStatus() == ExperimentStatus.RUNNING ) ) {
-			runningExperiments.add( experiment );
-			//updateFragments(); 
-			What ????
-		}
+		debug("done updating fragments.");
 	}	
+	
+	// *************************************************************************
+	
 	
 	public boolean isRunning() {
 		return ( runningExperiments.size() > 0 );

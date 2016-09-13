@@ -134,10 +134,29 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			byte[] userSuppliedTag, OrderType sentOrdering,	TransportationTypeHandle theTransport, 
 			SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
 		
+		String message = new String ( userSuppliedTag );
+		debug( "Notification received: " + message );
+		
 		try {
 			if ( SagittariusFederate.getInstance().isExperimentStartedInteraction( interactionClass ) ) {
 				SagittariusFederate.getInstance().experimentStarted( theParameters );
 			}
+			
+			if ( SagittariusFederate.getInstance().isInstancesCreatedInteraction( interactionClass ) ) {
+				//
+			}			
+			
+			if ( SagittariusFederate.getInstance().isInstanceCreationErrorInteraction( interactionClass ) ) {
+				//
+			}			
+			
+			if ( SagittariusFederate.getInstance().isExperimentFinishedInteraction( interactionClass ) ) {
+				SagittariusFederate.getInstance().finishExperiment(theParameters);
+			}			
+			
+			
+			
+			
 		} catch ( Exception e ) {
 			error("Error starting experiment: " + e.getMessage() );
 		}

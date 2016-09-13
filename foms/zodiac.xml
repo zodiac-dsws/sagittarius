@@ -60,6 +60,57 @@
                 </parameter>
             </interactionClass>
 			
+            <interactionClass>
+                <name>ExperimentFinished</name>
+                <sharing>PublishSubscribe</sharing>
+                <dimensions/>
+                <transportation>HLAreliable</transportation>
+                <order>Receive</order>
+                <semantics>Gemini will broadcast when a experiment is finished</semantics>
+                <parameter>
+                    <name>ExperimentSerial</name>
+                    <dataType>HLAunicodeString</dataType>
+                    <semantics>The serial number of Experiment</semantics>
+                </parameter>
+            </interactionClass>
+
+            <interactionClass>
+                <name>InstanceCreationError</name>
+                <sharing>PublishSubscribe</sharing>
+                <dimensions/>
+                <transportation>HLAreliable</transportation>
+                <order>Receive</order>
+                <semantics>Gemini will broadcast when instance creation fail</semantics>
+                <parameter>
+                    <name>ExperimentSerial</name>
+                    <dataType>HLAunicodeString</dataType>
+                    <semantics>The serial number of Experiment</semantics>
+                </parameter>
+                <parameter>
+                    <name>Reason</name>
+                    <dataType>HLAunicodeString</dataType>
+                    <semantics>The Error description as Exception.getMessage()</semantics>
+                </parameter>
+            </interactionClass>
+
+            <interactionClass>
+                <name>InstancesCreated</name>
+                <sharing>PublishSubscribe</sharing>
+                <dimensions/>
+                <transportation>HLAreliable</transportation>
+                <order>Receive</order>
+                <semantics>Gemini will broadcast when Instances was created</semantics>
+                <parameter>
+                    <name>ExperimentSerial</name>
+                    <dataType>HLAunicodeString</dataType>
+                    <semantics>The serial number of Experiment</semantics>
+                </parameter>
+                <parameter>
+                    <name>InstanceCount</name>
+                    <dataType>HLAinteger32BE</dataType>
+                    <semantics>Number of Instances created</semantics>
+                </parameter>
+            </interactionClass>			
 			
 		</interactionClass>
 	</interactions>

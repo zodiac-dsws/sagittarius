@@ -1,1 +1,1 @@
-java -jar teapot-1.2.0-beta.jar
+java -jar sagittarius-1.0.jar

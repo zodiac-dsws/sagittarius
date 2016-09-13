@@ -1,5 +1,6 @@
 package br.com.cmabreu.zodiac.sagittarius.services;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import br.com.cmabreu.zodiac.sagittarius.entity.User;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.DatabaseConnectException;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.InsertException;
 import br.com.cmabreu.zodiac.sagittarius.exceptions.NotFoundException;
+import br.com.cmabreu.zodiac.sagittarius.exceptions.UpdateException;
 import br.com.cmabreu.zodiac.sagittarius.repository.ExperimentRepository;
 
 
@@ -80,7 +82,25 @@ public class ExperimentService {
 
 	private void debug( String s ) {
 		Logger.getInstance().debug(this.getClass().getName(), s );
-	}	
+	}
+
+	public void updateExperiment(Experiment experiment) throws UpdateException {
+		debug("update " + experiment.getTagExec() );
+		Experiment oldExperiment;
+		try {
+			oldExperiment = rep.getExperiment( experiment.getIdExperiment() );
+		} catch (NotFoundException e) {
+			throw new UpdateException( e.getMessage() );
+		}
+		oldExperiment.setStatus( experiment.getStatus() );
+		oldExperiment.setAlterationDate( Calendar.getInstance().getTime() );
+		oldExperiment.setLastExecutionDate( experiment.getLastExecutionDate() );
+		oldExperiment.setFinishDateTime( experiment.getFinishDateTime() );
+		oldExperiment.setActivitiesSpecs( experiment.getActivitiesSpecs() );
+		oldExperiment.setImagePreviewData( experiment.getImagePreviewData() );
+		
+		rep.newTransaction();
+		rep.updateExperiment(oldExperiment);	}	
 
 	
 }

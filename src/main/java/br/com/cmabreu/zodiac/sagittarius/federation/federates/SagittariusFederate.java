@@ -19,9 +19,12 @@ import br.com.cmabreu.zodiac.sagittarius.exceptions.NotFoundException;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.ExperimentFinishedInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.ExperimentStartedInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.GeminiClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.GenerateInstancesInteractionClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.InstanceCreationErrorInteractionClass;
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.InstancesCreatedInteractionClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.SagittariusClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.ScorpioClass;
 import br.com.cmabreu.zodiac.sagittarius.federation.objects.CoreObject;
@@ -53,6 +56,9 @@ public class SagittariusFederate {
 	private GeminiClass geminiClass;
 	private GenerateInstancesInteractionClass generateInstancesInteractionClass;
 	private ExperimentStartedInteractionClass experimentStartedInteractionClass;
+	private ExperimentFinishedInteractionClass experimentFinishedInteractionClass;
+	private InstancesCreatedInteractionClass instancesCreatedInteractionClass;
+	private InstanceCreationErrorInteractionClass instanceCreationErrorInteractionClass;	
 	
 	// ==== OLD SAGITARII ========================
 	private InstanceBuffer instanceBuffer;
@@ -89,14 +95,32 @@ public class SagittariusFederate {
 		}
 	}	
 	
-	private void finishExperiment(Experiment experiment) {
-		System.out.println("Experiment " + experiment.getTagExec() + " finished.");
-		experiment.setStatus( ExperimentStatus.FINISHED );
+	public void finishExperiment( ParameterHandleValueMap theParameters ) throws Exception {
+		String experimentSerial = experimentFinishedInteractionClass.getExperimentSerial( theParameters );
+		debug("Received notification to finish Experiment " + experimentSerial );
+		ExperimentService es = new ExperimentService();
+		Experiment exp = es.getExperiment( experimentSerial );
+		finishExperiment( exp );
+	}
+	
+	private void finishExperiment(Experiment experiment) throws Exception {
+		debug("Removing Experiment " + experiment.getTagExec() + " from buffer and setting as Finished.");
+		
+		if ( experiment.getStatus() != ExperimentStatus.FINISHED ) {
+			ExperimentService es = new ExperimentService();
+			experiment.setStatus( ExperimentStatus.FINISHED );
+			experiment.setFinishDateTime( Calendar.getInstance().getTime() );
+			es.updateExperiment(experiment);
+		}
+		
 		runningExperiments.remove( experiment );
+		debug("Experiment " + experiment.getTagExec() + " finished.");
+
+		debug("Broadcast to the Federation " + experiment.getTagExec() + " is finished." );
+		experimentFinishedInteractionClass.send( experiment.getTagExec() );
 	}
 	
 	private void startNextActivities( Experiment exp ) {
-		debug("Start next activities...");
 		try {
 			generateInstancesInteractionClass.send( exp.getTagExec() );
 		} catch ( Exception e) {
@@ -140,8 +164,8 @@ public class SagittariusFederate {
 		}
 	}
 	
-	private void tryToFinish( Experiment experiment ) {
-		debug("Trying to finish experiment " + experiment.getTagExec() );
+	private void tryToFinish( Experiment experiment ) throws Exception {
+		debug("Trying to finish experiment " + experiment.getTagExec() + "..." );
 		int totalFragments = experiment.getFragments().size();
 		int totalFinished = 0;
 		boolean haveMore = false;
@@ -162,6 +186,7 @@ public class SagittariusFederate {
 			if ( ( frag.getStatus() == FragmentStatus.RUNNING ) && ( !isQueued ) ) {
 				finishFragment( frag );
 				if ( haveMore ) {
+					debug("Still having Fragments to process. Asking more Instances to Gemini...");
 					startNextActivities( experiment );
 					return;
 				}
@@ -201,10 +226,7 @@ public class SagittariusFederate {
 			// 
 		}
 		int buffer = instanceBuffer.merge( listContainer );
-		
-		// TODO: Really??
-		//updateFragments();
-		
+	
 		return buffer;
 	}
 	
@@ -244,10 +266,7 @@ public class SagittariusFederate {
 				// Case 2 --------------------------------------------------------------------
 				if ( frag.getStatus() == FragmentStatus.RUNNING ) {
 					debug(" > updating instance count");
-					
-					// TODO: Check buffers BEFORE check database.
-					// If we still have instances in buffers, no need to hit database, right?
-					
+				
 					try {
 						InstanceService instanceService = new InstanceService(); 
 						count = instanceService.getPipelinedList( frag.getIdFragment() ).size();
@@ -430,22 +449,36 @@ public class SagittariusFederate {
 			coreClass.subscribe();
 			coreClass.publishCurrentInstance();
 			
-			// Allow to send generate instances commands to Gemini
+			// Allow to send "Generate Instances" commands to Gemini
 			generateInstancesInteractionClass = new GenerateInstancesInteractionClass();
 			generateInstancesInteractionClass.publish();				
 
 			// Listen to new Running Experiments
 			experimentStartedInteractionClass = new ExperimentStartedInteractionClass();
-			experimentStartedInteractionClass.subscribe();			
+			experimentStartedInteractionClass.subscribe();	
 			
-			// Subscribe to know about Gemini online
+			// Listen when a Experiment is finished.
+			experimentFinishedInteractionClass = new ExperimentFinishedInteractionClass();
+			experimentFinishedInteractionClass.subscribe();
+			// We can finish Experiments to
+			experimentFinishedInteractionClass.publish();
+			
+			// Listen when create instances
+			instancesCreatedInteractionClass = new InstancesCreatedInteractionClass();
+			instancesCreatedInteractionClass.subscribe();
+			
+			// Listen when fail to create instances
+			instanceCreationErrorInteractionClass = new InstanceCreationErrorInteractionClass();
+			instanceCreationErrorInteractionClass.subscribe();			
+			
+			// Listen to know about Gemini online
 			geminiClass = new GeminiClass();
 			geminiClass.subscribe();
 
-			debug("done.");
+			debug("done starting Federate.");
 			
 		} else {
-			warn("server is already running an instance");
+			warn("Sagittarius is already running an Instance");
 		}
 	}
 	
@@ -540,7 +573,7 @@ public class SagittariusFederate {
 						try {
 							coreClass.updateAttributeValuesObject( core );
 						} catch ( Exception e ) {
-							warn("Returning Instance " + instance.getSerial() + " to buffer because of " + e.getMessage() );
+							warn("Returning Instance " + instance.getSerial() + " to buffer because " + e.getMessage() );
 							instanceBuffer.returnToBuffer(instance);
 						}
 					} 
@@ -567,6 +600,18 @@ public class SagittariusFederate {
 
 	public boolean isExperimentStartedInteraction(InteractionClassHandle interactionClassHandle) {
 		return experimentStartedInteractionClass.getInteractionClassHandle().equals( interactionClassHandle );
+	}
+
+	public boolean isInstancesCreatedInteraction(InteractionClassHandle interactionClassHandle) {
+		return instancesCreatedInteractionClass.getInteractionClassHandle().equals( interactionClassHandle );
+	}
+
+	public boolean isInstanceCreationErrorInteraction(InteractionClassHandle interactionClassHandle) {
+		return instanceCreationErrorInteractionClass.getInteractionClassHandle().equals( interactionClassHandle );
+	}
+
+	public boolean isExperimentFinishedInteraction(InteractionClassHandle interactionClassHandle) {
+		return experimentFinishedInteractionClass.getInteractionClassHandle().equals( interactionClassHandle );
 	}
 
 }

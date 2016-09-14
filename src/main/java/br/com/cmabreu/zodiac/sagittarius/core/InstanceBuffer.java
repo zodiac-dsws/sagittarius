@@ -138,7 +138,7 @@ public class InstanceBuffer {
 				}
 			}
 		}
-		warn("owner of instance " + instance.getSerial() + " not found. Will discard this instance.");
+		warn("owner of instance " + instance.getSerial() + " not found ("+instance.getIdFragment()+"). Will discard this instance.");
 		return false;
 	}
 	

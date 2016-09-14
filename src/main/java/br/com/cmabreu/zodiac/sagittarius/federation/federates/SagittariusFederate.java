@@ -292,6 +292,10 @@ public class SagittariusFederate {
 	}
 	
 	public synchronized Instance getNextInstance(String macAddress) {
+		if ( getRunningExperiments().size() == 0 ) {
+			error("Node "+macAddress+" is requesting Instance but have no Experiments running");
+			return null;
+		}
 		return instanceBuffer.getNextInstance( macAddress, getRunningExperiments() );
 	}
 

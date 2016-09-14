@@ -15,19 +15,18 @@ import br.com.cmabreu.zodiac.sagittarius.services.ExperimentService;
 public class Main {
 	private ScheduledExecutorService scheduler;
 	
-    private void loggerDebug( String log ) {
-    	System.out.println( "[DEBUG] Main " + log );
-    }
-    
-    private void loggerError( String log ){
-    	System.out.println( "[ERROR] Main " + log );
-    }
+	
+	private void debug( String s ) {
+		Logger.getInstance().debug(this.getClass().getName(), s );
+	}	
 
-
+	private void error( String s ) {
+		Logger.getInstance().error(this.getClass().getName(), s );
+	}	
+	
     public static void main( String[] args ) {
     	System.out.println("Starting Sagittarius...");
     	new Main().initialize();
-    	
     }
     
     public void initialize() {
@@ -51,23 +50,23 @@ public class Main {
 			String passwd = config.getPassword();
 			String database = config.getDatabaseName();
     		
-			loggerDebug("Credentials: " + user + " | " + database);
+			debug("Credentials: " + user + " | " + database);
 			
     		ConnFactory.setCredentials(user, passwd, database);
 
-			loggerDebug("check for interrupted work");	
+			debug("check for interrupted work");	
 			try {
 				ExperimentService ws = new ExperimentService();
 				List<Experiment> running = ws.getRunning();
 				SagittariusFederate.getInstance().setRunningExperiments( running );
 				SagittariusFederate.getInstance().reloadAfterCrash();
-				loggerDebug("found " + SagittariusFederate.getInstance().getRunningExperiments().size() + " running experiments");	
+				debug("found " + SagittariusFederate.getInstance().getRunningExperiments().size() + " running experiments");	
 			} catch ( NotFoundException e ) {
-				loggerDebug("no running experiments found");	
+				debug("no running experiments found");	
 			}			
 
 	       	        
-	        loggerDebug("Buffer cabacity " + maxInputBufferCapacity );
+	        debug("Buffer cabacity " + maxInputBufferCapacity );
 	        SagittariusFederate.getInstance().setMaxInputBufferCapacity( maxInputBufferCapacity );
 	        SagittariusFederate.getInstance().startServer();
 	        SagittariusFederate.getInstance().loadBuffers();
@@ -78,7 +77,7 @@ public class Main {
 
 		} catch (Exception e) { 
 			System.out.println( e.getMessage() );
-			loggerError( e.getMessage() );
+			error( e.getMessage() );
 			//e.printStackTrace(); 
 		}
         

@@ -37,6 +37,8 @@ public class Main {
     		int maxInputBufferCapacity = 500;
     		
     		Logger.getInstance().enable();
+    		Logger.getInstance().canOutputToFile( true );
+    		
        
 			Configurator config = Configurator.getInstance("config.xml");
 			config.loadMainConfig();

@@ -1,11 +1,41 @@
 package br.com.cmabreu.zodiac.sagittarius.core;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import br.com.cmabreu.zodiac.sagittarius.misc.PathFinder;
+
 public class Logger {
 	private static Logger instance;
 	private boolean enabled;
+	private boolean toFile = true;
+	private PrintWriter out;
+	
+	public Logger() {
+		try {
+			String fileName = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss").format( new Date() ) + ".txt";
+			String path = PathFinder.getInstance().getPath() + "/logs/";
+			File fil = new File( path );
+			fil.mkdirs();
+			
+			FileWriter fw = new FileWriter( path + fileName, true );
+		    BufferedWriter bw = new BufferedWriter(fw);
+		    out = new PrintWriter(bw);
+		} catch ( Exception e ) {
+			toFile = false;
+		}
+	}
 	
 	public void enable() {
 		enabled = true;
+	}
+	
+	public void canOutputToFile( boolean toFile ) {
+		this.toFile = toFile;
 	}
 	
 	public void disable() {
@@ -25,19 +55,31 @@ public class Logger {
 		return temp[ pos ] ;
 	}
 	
+	private synchronized void print( String s ) {
+		System.out.println( s );
+		if ( toFile ) {
+			out.println( s );
+			out.flush();
+		}
+		
+	}
+	
 	public void debug( String className, String message ) {
 		if ( !enabled ) { return; }
-		System.out.println( "[DEBUG] " + getClassName(className) + " " + message);
+		String s = "[DEBUG] " + getClassName(className) + " " + message;
+		print( s );
 	}
 	
 	public void error( String className, String message ) {
 		if ( !enabled ) { return; }
-		System.out.println( "[ERROR] " + getClassName(className) + " " + message);
+		String s = "[ERROR] " + getClassName(className) + " " + message;
+		print( s );
 	}
 	
 	public void warn( String className, String message ) {
 		if ( !enabled ) { return; }
-		System.out.println( "[WARN] " + getClassName(className) + " " + message);
+		String s = "[WARN] " + getClassName(className) + " " + message;
+		print( s );
 	}
 
 	

@@ -15,6 +15,7 @@ import br.com.cmabreu.zodiac.sagittarius.core.instances.InstanceListContainer;
 import br.com.cmabreu.zodiac.sagittarius.entity.Experiment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Fragment;
 import br.com.cmabreu.zodiac.sagittarius.entity.Instance;
+import br.com.cmabreu.zodiac.sagittarius.exceptions.NotFoundException;
 import br.com.cmabreu.zodiac.sagittarius.federation.Environment;
 import br.com.cmabreu.zodiac.sagittarius.federation.RTIAmbassadorProvider;
 import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreClass;
@@ -119,11 +120,15 @@ public class SagittariusFederate {
 	}
 	
 	private void startNextActivities( Experiment exp ) {
+		debug("Request Gemini to start next Fragment and create Instances for Experiment " + exp.getTagExec() );
+		exp.setStatus( ExperimentStatus.WAITING_INSTANCES );
+		
 		try {
 			generateInstancesInteractionClass.send( exp.getTagExec() );
 		} catch ( Exception e) {
 			e.printStackTrace();
 		}
+		
 	}
 
 	private void finishFragment( Fragment frag ) {
@@ -142,7 +147,6 @@ public class SagittariusFederate {
 	// New gemini found. If this is the first one then request again to create instances.
 	public void requestCreateInstancesAgain() {
 		if ( getRunningExperiments().size() == 0 ) return;
-		
 		debug("Asking again to generate instances for Experiments: ");
 		for ( Experiment experiment : getRunningExperiments() ) {
 			boolean haveMore = false;
@@ -172,6 +176,7 @@ public class SagittariusFederate {
 			boolean isQueued = instanceBuffer.isQueued( frag );
 			System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + isQueued );
 			if ( ( frag.getStatus() == FragmentStatus.RUNNING ) && ( !isQueued ) ) {
+				debug("Will finish Fragment " + frag.getSerial() );
 				finishFragment( frag );
 			}
 			
@@ -187,26 +192,32 @@ public class SagittariusFederate {
 		if ( runningExperimentCount == 0 ) return 0;
 		InstanceListContainer listContainer = new InstanceListContainer();
 		
+		updateFragments();
+		
 		if ( instanceBuffer.canLoadMore() ) {
 			for ( Experiment experiment : getRunningExperiments() ) {
-				try {
-					List<Instance> tempBuffer = instanceBuffer.loadBuffer( experiment, runningExperimentCount );
-					if ( tempBuffer != null ) {
-						debug("Experiment " + experiment.getTagExec() + " have " + tempBuffer.size() + " instances running. Adding to merge buffer...");
-						listContainer.addList( new InstanceList( tempBuffer, experiment.getTagExec() ) );
+				if ( experiment.getStatus() == ExperimentStatus.RUNNING ) { 
+					try {
+						List<Instance> tempBuffer = instanceBuffer.loadBuffer( experiment, runningExperimentCount );
+						if ( tempBuffer != null ) {
+							debug("Experiment " + experiment.getTagExec() + " have " + tempBuffer.size() + " instances running. Adding to merge buffer...");
+							listContainer.addList( new InstanceList( tempBuffer, experiment.getTagExec() ) );
+						}
+					} catch ( Exception e ) {
+						requestMoreInstancesAndFinishFragment( experiment );
 					}
-				} catch ( Exception e ) {
-					requestMoreInstancesAndFinishFragment( experiment );
+				} else {
+					debug("Experiment " + experiment.getTagExec() + " waiting Instances...");
 				}
 			}
-			updateFragments();
+			
 		} else {
 			// 
 		}
 		int buffer = 0;
 		
 		if ( listContainer.size() > 0 ) {
-			debug("Merge buffer size: " + listContainer.size() + ". Adding to the Instance buffer.");
+			debug("Merge Buffer size: " + listContainer.size() + ". Adding to the Instance buffer.");
 			buffer = instanceBuffer.merge( listContainer );
 		} else {
 			debug("Merge buffer is empty. No Instances to process for any ("+runningExperimentCount+") running Experiment.");
@@ -234,24 +245,28 @@ public class SagittariusFederate {
 	private synchronized void updateFragments() throws Exception {
 		debug("Updating Fragments...");
 		InstanceService instanceService = new InstanceService();
-		FragmentService fragmentService = new FragmentService();
+		//FragmentService fragmentService = new FragmentService();
 		for ( Experiment exp : runningExperiments ) {
-			debug(" " + exp.getTagExec() + ": ");
+			debug(" Instances per Fragments for " + exp.getTagExec() + ": ");
 			for ( Fragment frag : exp.getFragments() ) {
-				int oldRemainingInstances = frag.getRemainingInstances();
+				//int oldRemainingInstances = frag.getRemainingInstances();
 				int count = 0;
 				try {
 					instanceService.newTransaction();
 					count = instanceService.getPipelinedList( frag.getIdFragment() ).size();
+				} catch ( NotFoundException e) {	
+					//debug("No Instances pipelined for Fragment " + frag.getSerial() + " (" + frag.getIdFragment() + ")");
 				} catch ( Exception e) {
-					count = 0;
+					error("Update Fragment " + frag.getSerial() + " error: " + e.getMessage() );
 				}
 				debug("  > " + frag.getSerial() + " " + count );
+				/*
 				if( oldRemainingInstances != count ) {
 					fragmentService.newTransaction();
 					frag.setRemainingInstances( count );
 					fragmentService.updateFragment( frag );
 				}
+				*/
 			}	
 		}
 		debug("done updating fragments.");
@@ -472,8 +487,11 @@ public class SagittariusFederate {
 	}
 	
 	public void attributeOwnershipAcquisitionNotification( ObjectInstanceHandle theObject, AttributeHandleSet securedAttributes ) {
-		debug("I now own the Current Instance attibute. Sending new instance...");
-		sendInstance( theObject );
+		CoreObject core = coreClass.getCoreByHandle( theObject );
+		debug("Got Core " + core.getSerial() + "@" + core.getOwnerNode() + " ownership.");
+		if ( getRunningExperiments().size() > 0 ) {
+			sendInstance( theObject );
+		} 
 	}	
 	
 	private void debug( String s ) {
@@ -521,38 +539,41 @@ public class SagittariusFederate {
 	}
 	
 	
-	private synchronized void sendInstance( ObjectInstanceHandle theObject ) {
+	private void sendInstance( ObjectInstanceHandle theObject ) {
 		try {
-			for ( CoreObject core : coreClass.getCores()  ) {
-				if ( core.isMe( theObject ) ) {
-					Instance instance = getNextInstance( core.getOwnerNode() );
-					if ( instance != null ) {
-						debug("sending Instance " + instance.getSerial() + " to Core " + core.getSerial() + "@" + core.getOwnerNode() );
-						core.setCurrentInstance( encode( instance ) );
-						try {
-							coreClass.updateAttributeValuesObject( core );
-						} catch ( Exception e ) {
-							warn("Returning Instance " + instance.getSerial() + " to buffer because " + e.getMessage() );
-							instanceBuffer.returnToBuffer(instance);
-						}
-					} 
-					break;
+			CoreObject core = coreClass.getCoreByHandle(theObject);
+			debug("Entering SYNCH method --- " + core.getSerial() );
+			synchronized(this) {
+				Instance instance = getNextInstance( core.getOwnerNode() );
+				if ( instance != null ) {
+					debug("sending Instance " + instance.getSerial() + " to Core " + core.getSerial() + "@" + core.getOwnerNode() );
+					core.setCurrentInstance( encode( instance ) );
+					try {
+						coreClass.updateAttributeValuesObject( core );
+					} catch ( Exception e ) {
+						warn("Returning Instance " + instance.getSerial() + " to buffer because " + e.getMessage() );
+						instanceBuffer.returnToBuffer(instance);
+					}
 				}
 			}
+			debug("Leaving  SYNCH method --- " + core.getSerial() );
+				
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
 	}	
 
 	public void checkCores() {
-		try {
-			for ( CoreObject core : coreClass.getCores()  ) {
-				if (  core.getCurrentInstance().equals("*")  && !core.isWorking() ) {
-					sendInstance( core.getHandle() );
+		if ( getRunningExperiments().size() > 0 ) {
+			try {
+				for ( CoreObject core : coreClass.getCores()  ) {
+					if (  core.getCurrentInstance().equals("*")  && !core.isWorking() ) {
+						sendInstance( core.getHandle() );
+					}
 				}
+			} catch ( Exception e ) {
+				e.printStackTrace();
 			}
-		} catch ( Exception e ) {
-			e.printStackTrace();
 		}
 		
 	}
@@ -571,6 +592,32 @@ public class SagittariusFederate {
 
 	public boolean isExperimentFinishedInteraction(InteractionClassHandle interactionClassHandle) {
 		return experimentFinishedInteractionClass.getInteractionClassHandle().equals( interactionClassHandle );
+	}
+
+	public void instancesCreated(ParameterHandleValueMap theParameters) {
+		String experimentSerial =  instancesCreatedInteractionClass.getExperimentSerial( theParameters );
+		int count =  instancesCreatedInteractionClass.getInstanceCount( theParameters );
+		debug("Gemini reports creation of " + count + " Instances for Experiment " + experimentSerial );
+
+		try {
+			for ( Experiment experiment : getRunningExperiments() ) {
+				if ( experiment.getTagExec().equals( experimentSerial ) ) {
+					FragmentService fs = new FragmentService();
+					experiment.setFragments( fs.getList( experiment.getIdExperiment() ) );
+					experiment.setStatus( ExperimentStatus.RUNNING );
+					debug("Experiment " + experimentSerial + " is running again.");
+					return;
+				}
+			}
+		} catch ( Exception e ) {
+			error("Error setting new Fragments for Experiment " + experimentSerial + ": " + e.getMessage() );
+		}
+	}
+
+	public void instanceCreationError(ParameterHandleValueMap theParameters) {
+		String experimentSerial = instanceCreationErrorInteractionClass.getExperimentSerial( theParameters );
+		String reason = instanceCreationErrorInteractionClass.getReason( theParameters );
+		error("Gemini reports error finishing Experiment " + experimentSerial + ": " + reason);		
 	}
 
 }

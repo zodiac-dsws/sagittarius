@@ -114,7 +114,7 @@ public class InstanceRepository extends BasicRepository {
 		IDao<Instance> fm = df.getDao(this.session, Instance.class);
 		List<Instance> pipes = null;
 		try {
-			pipes = fm.getList("select * from instances where status = 'PIPELINED' and id_fragment = " + idFragment);
+			pipes = fm.getList( "select * from instances where status = 'PIPELINED' and id_fragment = " + idFragment );
 		} catch (Exception e) {
 			closeSession();
 			throw e;

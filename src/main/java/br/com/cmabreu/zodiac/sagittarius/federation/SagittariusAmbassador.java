@@ -143,11 +143,11 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			}
 			
 			if ( SagittariusFederate.getInstance().isInstancesCreatedInteraction( interactionClass ) ) {
-				//
+				SagittariusFederate.getInstance().instancesCreated( theParameters );
 			}			
 			
 			if ( SagittariusFederate.getInstance().isInstanceCreationErrorInteraction( interactionClass ) ) {
-				//
+				SagittariusFederate.getInstance().instanceCreationError( theParameters );
 			}			
 			
 			if ( SagittariusFederate.getInstance().isExperimentFinishedInteraction( interactionClass ) ) {

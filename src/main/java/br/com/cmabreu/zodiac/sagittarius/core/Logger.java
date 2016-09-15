@@ -57,6 +57,11 @@ public class Logger {
 	
 	private synchronized void print( String s ) {
 		System.out.println( s );
+		
+		if (s.toLowerCase().contains("repository") ) return;
+		if (s.toLowerCase().contains("service") ) return;
+		if (s.toLowerCase().contains("dao") ) return;
+		
 		if ( toFile ) {
 			out.println( s );
 			out.flush();

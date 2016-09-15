@@ -37,17 +37,17 @@ public class CoreClass {
 	private List<CoreObject> cores;
 	private EncoderDecoder encodec;
 	
-	public void requestCurrentInstanceOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
+	public void finishInstanceAndRequestAttributeOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
 		try {
 			
 			CoreObject core = getCoreByHandle( theObject );
 			String instanceSerial = core.getInstanceSerial();
 			
-			debug("Finishing Instance " + instanceSerial + " with result " + core.getResult() );
-			// if result == RESULT_OK then finish instance else refund instance to buffer
-			SagittariusFederate.getInstance().finishInstance( instanceSerial, core );
-			core.setInstanceSerial("*");
-			// ==========================================================================
+			if ( !instanceSerial.equals("*") ) {
+				debug("Finishing Instance " + instanceSerial + " with result " + core.getResult() );
+				SagittariusFederate.getInstance().finishInstance( instanceSerial, core );
+				core.setInstanceSerial("*");
+			}
 
 			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
@@ -58,7 +58,7 @@ public class CoreClass {
 		}
 	}		
 	
-	private CoreObject getCoreByHandle(ObjectInstanceHandle theObject) {
+	public CoreObject getCoreByHandle(ObjectInstanceHandle theObject) {
 		for ( CoreObject core : getCores() ) {
 			if ( core.getHandle().equals( theObject ) ) return core;
 		}
@@ -78,6 +78,7 @@ public class CoreClass {
 	
 
 	public void updateAttributeValuesObject( CoreObject core ) throws RTIexception {
+		debug("Updating attributes of Core " + core.getSerial() + "@" + core.getOwnerNode() );
 		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( core.getCurrentInstance() );
 		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
 		attributes.put( currentInstanceHandle, currentInstanceHandleValue.toByteArray() );
@@ -153,9 +154,8 @@ public class CoreClass {
 				
 				try {
 					if ( core.getCurrentInstance().equals("*") ) {
-						debug( "Core " + core.getSerial() + "@" + core.getOwnerNode() + ": Instance " + core.getInstanceSerial() + 
-								" done. Requesting attribute ownership..." );
-						requestCurrentInstanceOwnerShip( theObject );
+						debug( "Core " + core.getSerial() + "@" + core.getOwnerNode() + " reporting. Requesting ownership..." );
+						finishInstanceAndRequestAttributeOwnerShip( theObject );
 					} else {
 						// debug("Current Instance was changed to " + core.getCurrentInstance() );
 					}

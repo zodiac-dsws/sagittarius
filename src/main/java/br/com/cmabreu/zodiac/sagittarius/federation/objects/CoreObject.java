@@ -1,5 +1,6 @@
 package br.com.cmabreu.zodiac.sagittarius.federation.objects;
 
+import br.com.cmabreu.zodiac.sagittarius.federation.classes.CoreStatus;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class CoreObject {
@@ -15,6 +16,7 @@ public class CoreObject {
 	private String ownerNode = "";
 	private String currentInstance = "*";
 	private int result;
+	private CoreStatus status = CoreStatus.NOT_OWNED;
 	
 	public int getResult() {
 		return result;
@@ -118,6 +120,13 @@ public class CoreObject {
 	public void setActivitySerial(String activitySerial) {
 		this.activitySerial = activitySerial;
 	}
+
+	public void setStatus(CoreStatus status) {
+		this.status = status;
+	}
 	
+	public CoreStatus getStatus() {
+		return status;
+	}
 	
 }

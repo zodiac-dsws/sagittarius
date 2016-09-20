@@ -49,6 +49,14 @@ public class CoreClass {
 				core.setInstanceSerial("*");
 			}
 
+			try {
+				Thread.sleep(300);
+			} catch ( Exception e ) {
+				//
+			}
+			
+			core.setStatus( CoreStatus.REQUESTING_OWNERSHIP );
+			
 			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
 			ahs.add( currentInstanceHandle );
@@ -231,13 +239,6 @@ public class CoreClass {
 		attributes.add( currentInstanceHandle );
 		rtiamb.publishObjectClassAttributes( classHandle, attributes );
 	}
-	
-	/*
-	public void publish() throws RTIexception {
-		debug("publish Core Attributes");
-		rtiamb.publishObjectClassAttributes( classHandle, attributes );
-	}
-	*/
 	
 	public void subscribe() throws RTIexception {
 		debug("subscribe");

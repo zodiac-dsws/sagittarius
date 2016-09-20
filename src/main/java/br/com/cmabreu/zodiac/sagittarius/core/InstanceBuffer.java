@@ -160,7 +160,7 @@ public class InstanceBuffer {
 		if ( experiment.getStatus() != ExperimentStatus.PAUSED ) {
 			debug("Experiment " + experiment.getTagExec() + " will try to read " + sliceSize + " Instances from database to the buffer." );
 			InstanceService ps = new InstanceService();
-			preBuffer = ps.getHead( sliceSize, experiment.getIdExperiment() );
+			preBuffer = ps.getHead( sliceSize, experiment );
 			debug("Available Instances found: " + preBuffer.size() );
 		} else {
 			debug("experiment " + experiment.getTagExec() + " is paused. will ignore..." );

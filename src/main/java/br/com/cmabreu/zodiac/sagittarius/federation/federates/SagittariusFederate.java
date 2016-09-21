@@ -60,10 +60,9 @@ public class SagittariusFederate {
 	private ExperimentFinishedInteractionClass experimentFinishedInteractionClass;
 	private InstancesCreatedInteractionClass instancesCreatedInteractionClass;
 	private InstanceCreationErrorInteractionClass instanceCreationErrorInteractionClass;	
-	
-	// ==== OLD SAGITARII ========================
 	private InstanceBuffer instanceBuffer;
 	private List<Experiment> runningExperiments;
+
 	
 	public void experimentStarted(ParameterHandleValueMap theParameters) {
 		String experimentSerial = experimentStartedInteractionClass.getExperimentSerial( theParameters );
@@ -109,15 +108,6 @@ public class SagittariusFederate {
 		}
 		
 		debug("Experiment " + experimentSerial + " is not in the buffer.");
-		/*
-		if ( experiment.getStatus() != ExperimentStatus.FINISHED ) {
-			ExperimentService es = new ExperimentService();
-			experiment.setStatus( ExperimentStatus.FINISHED );
-			experiment.setFinishDateTime( Calendar.getInstance().getTime() );
-			es.newTransaction();
-			es.updateExperiment(experiment);
-		}
-		*/
 	}
 	
 	private void startNextActivities( Experiment exp ) {
@@ -175,7 +165,7 @@ public class SagittariusFederate {
 		// Now do the other checks
 		for ( Fragment frag : experiment.getFragments() ) {
 			boolean isQueued = instanceBuffer.isQueued( frag );
-			System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + isQueued );
+			//System.out.println( "  > " + frag.getSerial() + " : " + frag.getStatus() + " " + isQueued );
 			if ( ( frag.getStatus() == FragmentStatus.RUNNING ) && ( !isQueued ) ) {
 				debug("Will finish Fragment " + frag.getSerial() );
 				finishFragment( frag );
@@ -272,7 +262,7 @@ public class SagittariusFederate {
 				for ( Instance instance : instanceBuffer.getInstanceOutputBuffer()  ) {
 					if ( frag.getIdFragment() == instance.getIdFragment() ) {
 						fragmentStillWorking = true;
-						debug("Found Instance " + instance.getSerial() + " for Fragment " + frag.getSerial() + ": Processing.");
+						//debug("Found Instance " + instance.getSerial() + " for Fragment " + frag.getSerial() + ": Processing.");
 					}
 				}
 				
@@ -346,8 +336,6 @@ public class SagittariusFederate {
 		instanceBuffer.returnToBuffer(instance);
 	}
 	
-	// ============================== END OLD SAGITARII STUFF ================================================
-
 	public GenerateInstancesInteractionClass getGenerateInstancesInteractionClass() {
 		return generateInstancesInteractionClass;
 	}
@@ -421,14 +409,12 @@ public class SagittariusFederate {
 	}
 	
 	public void reflectAttributeUpdate( ObjectInstanceHandle theObject,  AttributeHandleValueMap theAttributes ) {
-		
 		try {
 			getCoreClass().reflectAttributeValues( theAttributes, theObject );
 			getScorpioClass().reflectAttributeValues( theAttributes, theObject );
 		} catch ( Exception e ) {
 			e.printStackTrace(); 
 		}		
-		
 	}
 	
 
@@ -512,13 +498,17 @@ public class SagittariusFederate {
 		rtiamb.joinFederationExecution( "Sagittarius", "SagittariusType", "Zodiac", joinModules );           
 	}
 	
+	/* 
+	 * Scorpio released the Core ownership. Send a new Instance to process if any.
+	 */
 	public void attributeOwnershipAcquisitionNotification( ObjectInstanceHandle theObject, AttributeHandleSet securedAttributes ) {
 		CoreObject core = coreClass.getCoreByHandle( theObject );
 		debug("Got Core " + core.getSerial() + "@" + core.getOwnerNode() + " ownership.");
 		core.setStatus( CoreStatus.OWNED );
 		if ( getRunningExperiments().size() > 0 ) {
-			sendInstance( theObject );
+			sendInstance( core );
 		} 
+		System.out.println("Recebido " + core.getSerial() + " (" + core.getStatus() + ") - Sent: " + core.getInstanceSerial() );
 	}	
 	
 	private void debug( String s ) {
@@ -533,14 +523,24 @@ public class SagittariusFederate {
 		Logger.getInstance().error(this.getClass().getName(), s );
 	}
 
+	/*
+	 * Scorpio is requesting the ownership of the Core. We must release it.
+	 */
 	public void releaseAttributeOwnership(ObjectInstanceHandle theObject, AttributeHandleSet candidateAttributes) {
 		CoreObject core = coreClass.getCoreByHandle( theObject );
+		
+		System.out.println("Liberar " + core.getSerial() );
+		
+		
 		core.setStatus( CoreStatus.NOT_OWNED );
 		debug("Release Core " + core.getSerial() + " ownership request.");
 		try {
 			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			rtiamb.attributeOwnershipDivestitureIfWanted( theObject, candidateAttributes );
 			debug("Core " + core.getSerial() + " released.");
+			
+			System.out.println("Liberado " + core.getSerial() );
+			
 		} catch ( Exception e ) {
 			error("Error: " + e.getMessage() );
 		}		
@@ -567,25 +567,74 @@ public class SagittariusFederate {
 		return respHex;
 	}
 	
-	
-	private void sendInstance( ObjectInstanceHandle theObject ) {
-		try {
-			CoreObject core = coreClass.getCoreByHandle(theObject);
+	// *********************************************************
+	// THIS IS THE MAIN METHODS
+	// To finish Instances and to send new Instances to Cores
+	// Must be synchronized to avoid concurrency problems
+	// *********************************************************
+	/*
+	 * Scorpio will send a Core attribute update.
+	 * This means the task is done.
+	 * Its time to finish the Instance and take back the core ownership
+	 * so we can sent it another instance by putting instance hex data into 
+	 * "currentInstance" attribute and sent an attribute update to the RTI.
+	 * Scorpio will detect this attribute update and will know it must
+	 * run this instance.
+	 * 
+	 */
+	public void finishInstanceAndRequestAttributeOwnerShip( CoreObject core ) throws Exception {
+		debug( "Core " + core.getSerial() + "@" + core.getOwnerNode() + " reporting. Requesting ownership..." );
+		synchronized(this) {
+			debug("------------------------------------------------------------------------------------");
+			debug("Entering SYNCH RCV method --- Core " + core.getSerial() + " (" + core.getStatus() + ")");
+			String instanceSerial = core.getInstanceSerial();
+			if ( !instanceSerial.equals("*") ) {
+				debug("Core " + core.getSerial() + ": Finishing Instance " + instanceSerial + " with result " + core.getResult() );
+				SagittariusFederate.getInstance().finishInstance( instanceSerial, core );
+				core.setInstanceSerial("*");
+			}
 			
+			/*
+			try {
+				Thread.sleep(500);
+			} catch ( Exception e ) {
+				//
+			}
+			*/
+			
+			
+			System.out.println("** Pedir " + core.getSerial() + " (" + core.getStatus() + ") - Finished : " + instanceSerial );
+			
+			coreClass.requestCoreAttributeOwnerShip( core );
+			debug("Leaving  SYNCH RCV method --- Core " + core.getSerial() );
+			debug("------------------------------------------------------------------------------------");
+		}
+		
+	}	
+	
+	// Scorpio released the Core ownership. Time to send a new Instance if any.
+	private void sendInstance( CoreObject core ) {
+		try {
 			synchronized(this) {
-				debug("Entering SYNCH method --- Core " + core.getSerial() + " (" + core.getStatus() + ")");
+				debug("------------------------------------------------------------------------------------");
+				debug("Entering SYNCH SND method --- Core " + core.getSerial() + " (" + core.getStatus() + ")");
 				Instance instance = getNextInstance( core.getOwnerNode() );
 				if ( instance != null ) {
 					debug("sending Instance " + instance.getSerial() + " to Core " + core.getSerial() + "@" + core.getOwnerNode() );
 					core.setCurrentInstance( encode( instance ) );
+					core.setInstanceSerial( instance.getSerial() );
 					try {
 						coreClass.updateAttributeValuesObject( core );
 					} catch ( Exception e ) {
+						e.printStackTrace();
 						warn("Returning Instance " + instance.getSerial() + " to buffer because " + e.getMessage() );
 						instanceBuffer.returnToBuffer(instance);
+						core.setCurrentInstance("*");
+						core.setInstanceSerial("*");
 					}
 				}
-				debug("Leaving  SYNCH method --- Core " + core.getSerial() );
+				debug("Leaving  SYNCH SND method --- Core " + core.getSerial() );
+				debug("------------------------------------------------------------------------------------");
 			}
 			
 		} catch ( Exception e ) {
@@ -593,12 +642,15 @@ public class SagittariusFederate {
 		}
 	}	
 
+	// *********************************************************
+	// *********************************************************
+	
 	public void checkCores() {
 		if ( getRunningExperiments().size() > 0 ) {
 			try {
 				for ( CoreObject core : coreClass.getCores()  ) {
 					if (  core.getCurrentInstance().equals("*")  && !core.isWorking() ) {
-						sendInstance( core.getHandle() );
+						sendInstance( core );
 					}
 				}
 			} catch ( Exception e ) {

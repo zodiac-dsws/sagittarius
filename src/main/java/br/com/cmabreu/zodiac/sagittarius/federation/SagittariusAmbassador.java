@@ -33,7 +33,6 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	public void reflectAttributeValues( ObjectInstanceHandle theObject, AttributeHandleValueMap theAttributes,
 	                                    byte[] tag, OrderType sentOrder, TransportationTypeHandle transport,
 	                                    SupplementalReflectInfo reflectInfo ) throws FederateInternalError {
-		
 		try {
 			SagittariusFederate.getInstance().reflectAttributeUpdate( theObject, theAttributes );
 		} catch ( Exception e ) {
@@ -93,6 +92,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 	
 	@Override
 	public void attributeOwnershipAcquisitionNotification(	ObjectInstanceHandle theObject,	AttributeHandleSet securedAttributes, byte[] userSuppliedTag) throws FederateInternalError {
+
 		try {
 			SagittariusFederate.getInstance().attributeOwnershipAcquisitionNotification( theObject, securedAttributes );
 		} catch ( Exception e ) {
@@ -158,7 +158,7 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			
 			
 		} catch ( Exception e ) {
-			error("Error starting experiment: " + e.getMessage() );
+			error("Error receiving notification: " + e.getMessage() );
 		}
 	}
 	

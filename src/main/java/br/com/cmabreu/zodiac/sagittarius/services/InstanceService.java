@@ -98,34 +98,32 @@ public class InstanceService {
 		// For each running get a piece of fragment
 		for ( Fragment frag : experiment.getFragments() ) {
 			if ( frag.getStatus() == FragmentStatus.RUNNING ) {
-				
+				int count = 0;
+				int newValue = 0;
 				try {
 					rep.newTransaction();
-					pipes.addAll( rep.getHead( fragPartition, idExperiment, frag.getIdFragment() ) );
+					count = getPipelinedList( frag.getIdFragment() ).size();
+					rep.newTransaction();
+					List<Instance> temp = rep.getHead( fragPartition, idExperiment, frag.getIdFragment() );
+					newValue = temp.size();
+					pipes.addAll( temp );
 				} catch ( NotFoundException nfe ) {
 					debug("No Instances found for Fragment " + frag.getSerial() );
 				}
 				
 				// Update Fragment Remaining Instances in Database
 				try {
-					debug("Updating Fragment Instanc count...");
 					rep.newTransaction();
-					int count = getPipelinedList( frag.getIdFragment() ).size();
-					debug(" > Was " + count);
-					int oldRemainingInstances = frag.getRemainingInstances();
-					debug(" > Found DB " + oldRemainingInstances );
-					int newRemainingInstances = oldRemainingInstances - count;
-					debug(" > Instances Left " + newRemainingInstances );
-					
+					int newRemainingInstances = count - newValue;
 					if ( newRemainingInstances < 0 ) newRemainingInstances = 0;
-					if( newRemainingInstances != oldRemainingInstances ) {
+					if( newRemainingInstances != frag.getRemainingInstances() ) {
 						fragmentService.newTransaction();
 						frag.setRemainingInstances( newRemainingInstances );
 						fragmentService.updateFragment( frag );
 					}
 					
 				} catch (Exception e) {
-					//
+					//e.printStackTrace();
 				}
 				
 				

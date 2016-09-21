@@ -37,34 +37,17 @@ public class CoreClass {
 	private List<CoreObject> cores;
 	private EncoderDecoder encodec;
 	
-	public void finishInstanceAndRequestAttributeOwnerShip( ObjectInstanceHandle theObject ) throws Exception {
-		try {
-			
-			CoreObject core = getCoreByHandle( theObject );
-			String instanceSerial = core.getInstanceSerial();
-			
-			if ( !instanceSerial.equals("*") ) {
-				debug("Finishing Instance " + instanceSerial + " with result " + core.getResult() );
-				SagittariusFederate.getInstance().finishInstance( instanceSerial, core );
-				core.setInstanceSerial("*");
-			}
 
-			try {
-				Thread.sleep(300);
-			} catch ( Exception e ) {
-				//
-			}
-			
+	public void requestCoreAttributeOwnerShip( CoreObject core ) throws Exception {
+		debug("Requesting Core ownership... " + core.getStatus() );
+		if ( core.getStatus() == CoreStatus.NOT_OWNED ) {
 			core.setStatus( CoreStatus.REQUESTING_OWNERSHIP );
-			
 			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			AttributeHandleSet ahs = rtiamb.getAttributeHandleSetFactory().create();
 			ahs.add( currentInstanceHandle );
-			rtiamb.attributeOwnershipAcquisition( theObject, ahs, null );
-		} catch ( Exception e ) {
-			e.printStackTrace();
+			rtiamb.attributeOwnershipAcquisition( core.getHandle(), ahs, "Sagittarius Attribute Request".getBytes() );
 		}
-	}		
+	}
 	
 	public CoreObject getCoreByHandle(ObjectInstanceHandle theObject) {
 		for ( CoreObject core : getCores() ) {
@@ -84,13 +67,16 @@ public class CoreClass {
 		return null;
 	}
 	
-
+	/*
+	 * Core have now a new Instance to process. Broadcast this to the Federation
+	 * and Scorpio will process it.
+	 */
 	public void updateAttributeValuesObject( CoreObject core ) throws RTIexception {
 		debug("Updating attributes of Core " + core.getSerial() + "@" + core.getOwnerNode() );
 		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( core.getCurrentInstance() );
 		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
 		attributes.put( currentInstanceHandle, currentInstanceHandleValue.toByteArray() );
-		rtiamb.updateAttributeValues( core.getHandle(), attributes, "Core Attributes".getBytes() );
+		rtiamb.updateAttributeValues( core.getHandle(), attributes, "Core Current Instance Attribute".getBytes() );
 	}	
 	
 	public void remove( ObjectInstanceHandle objHandle ) {
@@ -103,6 +89,9 @@ public class CoreClass {
 		}		
 	}
 
+	/*
+	 *  Found a new Core. Request its current state.
+	 */
 	public ObjectInstanceHandle createNew( ObjectInstanceHandle coreObjectHandle ) throws RTIexception {
 		CoreObject core = new CoreObject( coreObjectHandle );
 		cores.add( core );
@@ -110,6 +99,10 @@ public class CoreClass {
 		return coreObjectHandle;
 	}
 	
+	/*
+	 * Send the Core current Instance to the Federation.
+	 * Scorpio will run this instance.
+	 */
 	public void updateWorkingDataCore( CoreObject core ) throws Exception {
 		HLAunicodeString currentInstanceHandleValue = encodec.createHLAunicodeString( core.getCurrentInstance() );
 		AttributeHandleValueMap attributes = rtiamb.getAttributeHandleValueMapFactory().create(1);
@@ -117,6 +110,11 @@ public class CoreClass {
 		rtiamb.updateAttributeValues( core.getHandle(), attributes, "Core Working Data".getBytes() );
 	}	
 	
+	/*
+	 * Attributes update incoming. Must update our object with this new attribute values. 
+	 * If Scorpio sends a "*" in Current Instance attribute then it have finished the Instance
+	 * currently in Instance Serial attribute.
+	 */
 	public CoreObject reflectAttributeValues( AttributeHandleValueMap theAttributes, ObjectInstanceHandle theObject ) {
 		// Find the Object instance
 		for ( CoreObject core : getCores() ) {
@@ -162,15 +160,13 @@ public class CoreClass {
 				
 				try {
 					if ( core.getCurrentInstance().equals("*") ) {
-						debug( "Core " + core.getSerial() + "@" + core.getOwnerNode() + " reporting. Requesting ownership..." );
-						finishInstanceAndRequestAttributeOwnerShip( theObject );
+						SagittariusFederate.getInstance().finishInstanceAndRequestAttributeOwnerShip( core );
 					} else {
-						// debug("Current Instance was changed to " + core.getCurrentInstance() );
+						//
 					}
 				} catch ( Exception e ) {
 					e.printStackTrace();
 				}
-				
 				
 				return core;
 			}

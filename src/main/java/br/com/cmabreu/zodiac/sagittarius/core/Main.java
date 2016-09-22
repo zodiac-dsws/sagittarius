@@ -35,7 +35,7 @@ public class Main {
     		int interval = 5;
     		int maxInputBufferCapacity = 500;
     		
-    		Logger.getInstance().disable();
+    		Logger.getInstance().enable();
     		Logger.getInstance().canOutputToFile( true );
     		
        

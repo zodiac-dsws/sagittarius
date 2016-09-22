@@ -62,7 +62,13 @@ public class SagittariusFederate {
 	private InstanceCreationErrorInteractionClass instanceCreationErrorInteractionClass;	
 	private InstanceBuffer instanceBuffer;
 	private List<Experiment> runningExperiments;
+	private boolean mustCheckCores = false;
 
+	// When idle and a new Experiment turns to run
+	// need to check available cores to send instances
+	public boolean mustCheckCores() {
+		return mustCheckCores;
+	}
 	
 	public void experimentStarted(ParameterHandleValueMap theParameters) {
 		String experimentSerial = experimentStartedInteractionClass.getExperimentSerial( theParameters );
@@ -91,6 +97,7 @@ public class SagittariusFederate {
 			experiment.setFragments( fs.getList( experiment.getIdExperiment() ) );
 			runningExperiments.add( experiment );
 			debug("Experiment " + experiment.getTagExec() + " is now ready to process.");
+			mustCheckCores = true;
 		}
 	}	
 	
@@ -646,10 +653,12 @@ public class SagittariusFederate {
 	// *********************************************************
 	
 	public void checkCores() {
+		mustCheckCores = false;
+		debug("Main Heartbeat : Checking Cores...");
 		if ( getRunningExperiments().size() > 0 ) {
 			try {
 				for ( CoreObject core : coreClass.getCores()  ) {
-					if (  core.getCurrentInstance().equals("*")  && !core.isWorking() ) {
+					if (  core.getCurrentInstance().equals("*")  && !core.isWorking() && core.getStatus() == CoreStatus.OWNED ) {
 						sendInstance( core );
 					}
 				}
@@ -688,6 +697,7 @@ public class SagittariusFederate {
 					experiment.setFragments( fs.getList( experiment.getIdExperiment() ) );
 					experiment.setStatus( ExperimentStatus.RUNNING );
 					debug("Experiment " + experimentSerial + " is running again.");
+					mustCheckCores = true;
 					return;
 				}
 			}

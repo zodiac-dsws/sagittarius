@@ -134,8 +134,8 @@ public class SagittariusAmbassador extends NullFederateAmbassador {
 			byte[] userSuppliedTag, OrderType sentOrdering,	TransportationTypeHandle theTransport, 
 			SupplementalReceiveInfo receiveInfo) throws FederateInternalError {
 		
-		String message = new String ( userSuppliedTag );
-		debug( "Notification received: " + message );
+		//String message = new String ( userSuppliedTag );
+		//debug( "Notification received: " + message );
 		
 		try {
 			if ( SagittariusFederate.getInstance().isExperimentStartedInteraction( interactionClass ) ) {

@@ -67,6 +67,7 @@ public class SagittariusFederate {
 	// When idle and a new Experiment turns to run
 	// need to check available cores to send instances
 	public boolean mustCheckCores() {
+		if ( runningExperiments.size() != 1 ) mustCheckCores = false;
 		return mustCheckCores;
 	}
 	

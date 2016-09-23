@@ -516,7 +516,6 @@ public class SagittariusFederate {
 		if ( getRunningExperiments().size() > 0 ) {
 			sendInstance( core );
 		} 
-		System.out.println("Recebido " + core.getSerial() + " (" + core.getStatus() + ") - Sent: " + core.getInstanceSerial() );
 	}	
 	
 	private void debug( String s ) {
@@ -536,19 +535,12 @@ public class SagittariusFederate {
 	 */
 	public void releaseAttributeOwnership(ObjectInstanceHandle theObject, AttributeHandleSet candidateAttributes) {
 		CoreObject core = coreClass.getCoreByHandle( theObject );
-		
-		System.out.println("Liberar " + core.getSerial() );
-		
-		
 		core.setStatus( CoreStatus.NOT_OWNED );
 		debug("Release Core " + core.getSerial() + " ownership request.");
 		try {
 			RTIambassador rtiamb = RTIAmbassadorProvider.getInstance().getRTIAmbassador();
 			rtiamb.attributeOwnershipDivestitureIfWanted( theObject, candidateAttributes );
 			debug("Core " + core.getSerial() + " released.");
-			
-			System.out.println("Liberado " + core.getSerial() );
-			
 		} catch ( Exception e ) {
 			error("Error: " + e.getMessage() );
 		}		
@@ -601,18 +593,6 @@ public class SagittariusFederate {
 				SagittariusFederate.getInstance().finishInstance( instanceSerial, core );
 				core.setInstanceSerial("*");
 			}
-			
-			/*
-			try {
-				Thread.sleep(500);
-			} catch ( Exception e ) {
-				//
-			}
-			*/
-			
-			
-			System.out.println("** Pedir " + core.getSerial() + " (" + core.getStatus() + ") - Finished : " + instanceSerial );
-			
 			coreClass.requestCoreAttributeOwnerShip( core );
 			debug("Leaving  SYNCH RCV method --- Core " + core.getSerial() );
 			debug("------------------------------------------------------------------------------------");
